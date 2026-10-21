@@ -291,6 +291,12 @@ function joyRenderCartao(it, usadas) {
     const opcoes = ['', ...usadas];
     if (s.tecla && !opcoes.includes(s.tecla)) opcoes.push(s.tecla);
     corpo = `
+      <div class="joy-linha"><span class="joy-rot">Cor</span>
+        <select class="joy-sel" data-campo="cor" aria-label="Cor do LED">
+          <option value="">—</option>
+          ${Object.keys(JoystickGen.CORES_LED).filter((c) => c === s.cor || !JOY.config.sensores.some((x) => x !== s && x.tipo === 'led' && x.cor === c)).map((c) => `<option value="${c}"${c === s.cor ? ' selected' : ''}>${c}</option>`).join('')}
+        </select>
+      </div>
       <div class="joy-linha"><span class="joy-rot">Acende com</span>
         <select class="joy-sel" data-campo="tecla" aria-label="Tecla que acende o LED">
           ${opcoes.map((t) => `<option value="${escJ(t)}"${t === (s.tecla || '') ? ' selected' : ''}>${t ? escJ(JoystickGen.rotuloTecla(t)) : '— escolha —'}</option>`).join('')}
@@ -688,10 +694,11 @@ function joyIniciar() {
   });
   $('#bt-joy-app-fechar').addEventListener('click', () => $('#joy-dialogo-app').close());
   $('#bt-joy-padrao').addEventListener('click', () => {
-    if (!confirm('Voltar para o joystick de 4 botões (setas)? A montagem atual será apagada.')) return;
+    if (!confirm('Usar a montagem padrão da bancada?\n\nBotões D2 e D3 · ultrassônico TRIG D6 / ECHO D7 · buzzer D5 · LEDs vermelho D9, amarelo D10, verde D11 · potenciômetro em A0.\n\nA montagem atual será apagada.')) return;
     JOY.config = JoystickGen.configPadrao();
     JOY.config.sensores.forEach((s) => { s.uid = novoUid(); });
     joyMudou();
+    joyAviso('Montagem da bancada carregada. Troque as teclas à vontade.');
   });
 
   // diálogo do código

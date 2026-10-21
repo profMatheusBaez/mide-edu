@@ -71,6 +71,8 @@
 
   const rotuloTecla = (t) => (t === '*' ? 'qualquer tecla' : (t ? (TECLAS[t] || t.toUpperCase()) : '—'));
 
+  const CORES_LED = { vermelho: 'vermelho', amarelo: 'amarelo', verde: 'verde', azul: 'azul', branco: 'branco' };
+
   const TIPOS = {
     botao: { nome: 'Botão', sigla: 'BOTAO' },
     ultra: { nome: 'Ultrassônico', sigla: 'ULTRA' },
@@ -85,6 +87,9 @@
     return sensores.map((s) => {
       cont[s.tipo] = (cont[s.tipo] || 0) + 1;
       const n = cont[s.tipo];
+      // LED com cor vira "LED vermelho" (e LED_VERMELHO no código)
+      const cor = s.tipo === 'led' && CORES_LED[s.cor] ? s.cor : '';
+      if (cor) return { s, n, nome: `LED ${CORES_LED[cor]}`, var: 'led' + cap(cor), cte: 'LED_' + cor.toUpperCase() };
       return { s, n, nome: `${TIPOS[s.tipo].nome} ${n}`, var: TIPOS[s.tipo].sigla.toLowerCase() + n, cte: TIPOS[s.tipo].sigla + n };
     });
   }
@@ -823,22 +828,34 @@ if __name__ == "__main__":
     return out;
   }
 
-  /* Configuração inicial: o joystick original de 4 botões (setas). */
+  /* Montagem padrão da bancada do laboratório (botão "Padrão da bancada"):
+   *   botões D2 e D3 · ultrassônico TRIG D6 / ECHO D7 · buzzer D5 ·
+   *   LEDs vermelho D9, amarelo D10, verde D11 · potenciômetro 10k em A0.
+   * Teclas de exemplo para um jogo de corrida/nave: D2 atira (ESPAÇO), D3 acelera (↑),
+   * o potenciômetro é o volante (← / →), mão perto do ultrassônico freia (↓). */
   function configPadrao() {
     return {
       porta: '',
       sensores: [
-        { tipo: 'botao', pino: 2,  curto: true, longo: false, teclaCurto: 'left',  teclaLongo: '', msLongo: 500 },
-        { tipo: 'botao', pino: 7,  curto: true, longo: false, teclaCurto: 'right', teclaLongo: '', msLongo: 500 },
-        { tipo: 'botao', pino: 11, curto: true, longo: false, teclaCurto: 'down',  teclaLongo: '', msLongo: 500 },
-        { tipo: 'botao', pino: 12, curto: true, longo: false, teclaCurto: 'up',    teclaLongo: '', msLongo: 500 },
+        { tipo: 'botao', pino: 2, curto: true, longo: false, teclaCurto: 'space', teclaLongo: '', msLongo: 500 },
+        { tipo: 'botao', pino: 3, curto: true, longo: false, teclaCurto: 'up', teclaLongo: '', msLongo: 500 },
+        { tipo: 'ultra', trig: 6, echo: 7, faixas: [{ min: 0, max: 15, tecla: 'down', modo: 'segurar' }] },
+        { tipo: 'pot', pino: 'A0', faixas: [{ min: 0, max: 340, tecla: 'left', modo: 'segurar' }, { min: 683, max: 1023, tecla: 'right', modo: 'segurar' }] },
+        { tipo: 'led', pino: 9, cor: 'vermelho', tecla: 'space' },
+        { tipo: 'led', pino: 10, cor: 'amarelo', tecla: 'down' },
+        { tipo: 'led', pino: 11, cor: 'verde', tecla: 'up' },
+        { tipo: 'buzzer', pino: 5, sons: [
+          { tecla: 'space', quando: 'apertar', som: 'tiro' },
+          { tecla: 'up', quando: 'segurar', som: 'motor' },
+          { tecla: 'up', quando: 'soltar', som: 'nitro' },
+        ] },
       ],
     };
   }
 
   const api = {
     gerar, gerarIno, gerarPy, gerarBat, validar, paraApp, idDoIno, listarAcoes, zip, crc32, configPadrao,
-    teclaDoEvento, rotuloTecla, TECLAS, TIPOS, SONS, MOTOR, QUANDO, PINOS_DIGITAIS, PINOS_ANALOGICOS,
+    teclaDoEvento, rotuloTecla, TECLAS, TIPOS, SONS, CORES_LED, MOTOR, QUANDO, PINOS_DIGITAIS, PINOS_ANALOGICOS,
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   raiz.JoystickGen = api;

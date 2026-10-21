@@ -570,8 +570,12 @@ tela no Chromium (erro de compilação, escolher placa, Upload, Monitor, missão
 
 ## 15. Joystick — sensores do Arduino viram teclas do PC
 
-Aba **🎮 Joystick** (só Arduino Uno). Baseada no projeto "Joystick" do professor (4 botões nos
-pinos 2, 7, 11 e 12 → setas), que é a montagem que abre por padrão.
+Aba **🎮 Joystick** (só Arduino Uno). Baseada no projeto "Joystick" do professor (4 botões →
+setas). Abre com a **montagem padrão da bancada** (botão **⚙ Padrão da bancada**): push buttons em
+D2 (ESPAÇO) e D3 (↑), ultrassônico HC-SR04 com TRIG em D6 e ECHO em D7 (0–15 cm → ↓), buzzer em D5
+(tiro no ESPAÇO, motor segurando ↑, nitro ao soltar ↑), LEDs vermelho D9 (ESPAÇO), amarelo D10 (↓)
+e verde D11 (↑), potenciômetro 10k em A0 (volante: ← / →). As teclas são só exemplo; LED pode ter
+cor (vira `LED_VERMELHO` no código).
 
 **Como o aluno usa:** adiciona sensores pela coluna da esquerda, escolhe pino e tecla de cada
 um (clica no botão da tecla e aperta a tecla no teclado, ou escolhe um clique do mouse), clica
