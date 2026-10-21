@@ -567,3 +567,49 @@ tela no Chromium (erro de compilação, escolher placa, Upload, Monitor, missão
 
 **Para refazer os binários** (depois de mudar `dados.js` ou o firmware): ver
 `ferramentas/web/LEIA-ME-WEB.md`.
+
+## 15. Joystick — sensores do Arduino viram teclas do PC
+
+Aba **🎮 Joystick** (só Arduino Uno). Baseada no projeto "Joystick" do professor (4 botões nos
+pinos 2, 7, 11 e 12 → setas), que é a montagem que abre por padrão.
+
+**Como o aluno usa:** adiciona sensores pela coluna da esquerda, escolhe pino e tecla de cada
+um (clica no botão da tecla e aperta a tecla no teclado, ou escolhe um clique do mouse), clica
+em **Upload**, testa em **Testar no Monitor** (as teclas acendem na tela) e, para jogar, fecha o
+Monitor, baixa o **pacote (.zip)** e dá dois cliques em `Iniciar joystick.bat`. A montagem fica
+salva no navegador (`localStorage`, chave `mide_joystick_v1`).
+
+| Sensor | Configuração | O que acontece |
+|---|---|---|
+| Push button (`INPUT_PULLUP`, botão ao GND) | só curto | a tecla fica apertada enquanto o botão estiver apertado |
+| | curto + longo (tempo em ms) | toque rápido = tecla A uma vez; segurou = tecla B apertada até soltar |
+| | só longo | nada até o tempo; depois a tecla fica apertada até soltar |
+| Ultrassônico HC-SR04 (TRIG/ECHO) | faixas em cm (0–400) | entrou na faixa = começa; saiu = termina (troca só com 2 medidas iguais) |
+| Potenciômetro 10k (A0–A5) | faixas de 0 a 1023 | igual; ignora variações menores que 8 (tremido) |
+| LED (pino → 220 Ω → LED → GND) | uma tecla | acende **no próprio Arduino** enquanto algum sensor manda essa tecla |
+
+Cada faixa pode ser **segurar** (tecla apertada enquanto durar) ou **toque** (uma vez ao entrar).
+
+**Protocolo (Serial 9600):** cada ação tem um número; o Arduino manda `A3_DOWN` quando a ação 3
+começa e `A3_UP` quando termina. O `gamepad.py` tem a tabela `ACOES = {"A3": ("w", "segurar")}`
+e usa o `pydirectinput` (teclas e cliques). Ele acha o Arduino sozinho (ou use `PORTA = "COM5"`)
+e reconecta se o cabo sair. Só uma coisa usa a porta USB por vez: **feche o Monitor Serial da
+IDE (ou a aba do navegador) antes de rodar o `.bat`.**
+
+O `.ino` é gerado sem `String` e sem `float`, então grava tanto pelo `arduino-cli` quanto pela
+MIDE VM do site.
+
+**Arquivos:** `js/joystick_gen.js` (gerador, sem DOM — roda no Node), `js/joystick.js` (aba),
+`css/joystick.css`; ganchos em `ide.js` (`trocarAba`, `codigoAtual`, `podeGravar`) e
+`boards.js` (aba só no Uno). Ícones: os dos módulos (`assets/icone_modulo_*.png`).
+
+**Testes** (`ferramentas/joystick/`):
+- `node testar_joystick.js` — 4 montagens (padrão, completa, só LED, 32 ações): o `.ino`
+  compila na MIDE VM e no g++ (com cabeçalho falso do Arduino), o `.py` compila, saída
+  determinística, `.zip` válido;
+- `node simular_joystick.js` (precisa de `npm install avr8js@0.20.1`) — roda o `.ino` no
+  **firmware real da MIDE VM** no simulador: toque curto, toque longo, ultrassônico em duas
+  faixas, potenciômetro com ruído e o LED, conferindo a sequência exata de mensagens.
+
+**Ainda não testado:** no Uno real e com o `gamepad.py` num jogo no Windows.
+

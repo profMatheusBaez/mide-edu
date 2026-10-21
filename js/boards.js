@@ -63,6 +63,7 @@ function selecionarCurso(placa, linguagem = 'cpp') {
   if (placa === 'k10') $('#curso-linguagem').value = linguagem;
   $('#aba-completo').hidden = placa !== 'k10' && placa !== 'microbit';
   $('#aba-blocos').hidden = placa === 'k10';
+  $('#aba-joystick').hidden = placa !== 'uno';
   if (typeof legoAtivar === 'function') legoAtivar(placa === 'lego');
   if (typeof blocosTrocarPerfil === 'function') blocosTrocarPerfil(placa === 'lego' ? 'lego' : (placa === 'microbit' ? 'microbit' : 'uno'));
   if (placa === 'microbit' && typeof blocosMbReconfigurar === 'function') blocosMbReconfigurar({ visao: null, paleta: null });   // a linguagem do curso pode ter mudado

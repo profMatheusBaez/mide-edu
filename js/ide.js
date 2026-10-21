@@ -571,20 +571,25 @@ function trocarAba(qual) {
   if (qual === 'completo' && estado.placaCurso !== 'k10' && estado.placaCurso !== 'microbit') return;
   if (qual === 'blocos' && estado.placaCurso === 'k10') return;
   if (qual === 'treino' && estado.placaCurso === 'lego') return;   // sem Modo Treinamento na placa LEGO
+  if (qual === 'joystick' && estado.placaCurso !== 'uno') return;   // a aba Joystick é só do Arduino Uno
+  if (estado.aba === 'joystick' && qual !== 'joystick' && typeof joystickAoSair === 'function') joystickAoSair();
   estado.aba = qual;
   $('#aba-treino').classList.toggle('ativa', qual === 'treino');
   $('#aba-livre').classList.toggle('ativa', qual === 'livre');
   $('#aba-completo').classList.toggle('ativa', qual === 'completo');
   $('#aba-blocos').classList.toggle('ativa', qual === 'blocos');
+  $('#aba-joystick').classList.toggle('ativa', qual === 'joystick');
+  $('#area-joystick').hidden = qual !== 'joystick';
   $('#rolagem-treino').hidden = qual !== 'treino';
   $('#editor-livre-wrap').hidden = qual !== 'livre';
   $('#codigo-completo-wrap').hidden = qual !== 'completo';
   $('#area-blocos').hidden = qual !== 'blocos';
-  $('#palco').classList.toggle('sem-painel', qual === 'livre' || qual === 'blocos');
+  $('#palco').classList.toggle('sem-painel', qual === 'livre' || qual === 'blocos' || qual === 'joystick');
   $('#faixa-treino').classList.toggle('oculto', qual !== 'treino' || !estado.treino);
   if (qual === 'livre') renderLivre();
   if (qual === 'completo') renderCompleto();
   if (qual === 'blocos' && typeof blocosAoAbrir === 'function') blocosAoAbrir();
+  if (qual === 'joystick' && typeof joystickAoAbrir === 'function') joystickAoAbrir();
   atualizarCursor();
   atualizarBotoes();
 }
@@ -615,6 +620,7 @@ function renderCompleto() {
  * ---------------------------------------------------------- */
 function codigoAtual() {
   if (estado.aba === 'blocos') return typeof blocosCodigoAtual === 'function' ? blocosCodigoAtual() : '';
+  if (estado.aba === 'joystick') return typeof joystickCodigoAtual === 'function' ? joystickCodigoAtual() : '';
   if (estado.aba === 'livre') return $('#editor-livre').value;
   if (estado.aba === 'completo') return estado.fase?.solucao || '';
   const t = estado.treino;
@@ -628,6 +634,7 @@ function podeGravar() {
   if (estado.placaCurso === 'lego') return typeof legoPodeGravar === 'function' && legoPodeGravar();
   if (estado.placaCurso === 'microbit') return mbPodeGravar();
   if (estado.aba === 'blocos') return typeof blocosPodeGravar === 'function' && blocosPodeGravar();
+  if (estado.aba === 'joystick') return typeof joystickPodeGravar === 'function' && joystickPodeGravar();
   if (estado.aba === 'livre') return $('#editor-livre').value.trim().length > 0;
   if (estado.aba === 'completo') return !!estado.fase?.solucao;
   return !!estado.treino && estado.treino.idx >= estado.treino.linhas.length;
@@ -744,7 +751,7 @@ function aoTrocarPorta() {
 function ocupar(sim) {
   estado.ocupado = sim;
   document.body.style.cursor = sim ? 'progress' : '';
-  for (const id of ['aba-treino', 'aba-livre', 'aba-completo', 'bt-reiniciar', 'bt-sair', 'bt-professor']) {
+  for (const id of ['aba-treino', 'aba-livre', 'aba-completo', 'aba-joystick', 'bt-reiniciar', 'bt-sair', 'bt-professor']) {
     $('#' + id).disabled = sim;
   }
   $('#editor-livre').readOnly = sim;
@@ -764,7 +771,7 @@ async function compilar() {
   log('Compilando o sketch…', 'info');
   let deuCerto = false;
   try {
-    const r = await api('/api/compilar', { codigo, nome: estado.fase ? estado.fase.id : 'sketch', fqbn: estado.fqbn, placa: estado.placaCurso });
+    const r = await api('/api/compilar', { codigo, nome: estado.aba === 'joystick' ? 'Joystick' : (estado.fase ? estado.fase.id : 'sketch'), fqbn: estado.fqbn, placa: estado.placaCurso });
     deuCerto = !!r.ok;
     logBloco(r.log, r.ok ? 'fraco' : 'erro');
     log(r.ok ? '✓ Compilação concluída.' : '✗ Erro de compilação.', r.ok ? 'ok' : 'erro');
@@ -793,11 +800,14 @@ async function gravar() {
   barraIniciar('gravar');
   log(`Gravando em ${porta}…`, 'info');
   try {
-    const r = await api('/api/gravar', { codigo, porta, nome: estado.fase ? estado.fase.id : 'sketch', fqbn: estado.fqbn, placa: estado.placaCurso });
+    const r = await api('/api/gravar', { codigo, porta, nome: estado.aba === 'joystick' ? 'Joystick' : (estado.fase ? estado.fase.id : 'sketch'), fqbn: estado.fqbn, placa: estado.placaCurso });
     logBloco(r.log, r.ok ? 'fraco' : 'erro');
     if (r.ok) {
       log('✓ Upload concluído. Olhe para a sua placa!', 'ok');
       barraFinalizar(true, 'Gravado! Olhe para a sua placa.');
+      if (estado.aba === 'joystick') {
+        log('Joystick gravado. Teste em "Testar no Monitor"; para jogar, feche o Monitor e rode o "Iniciar joystick.bat" do pacote.', 'info');
+      }
       // XP e medalha são do Modo Treinamento. No Editor C++ o aluno está
       // escrevendo o código dele — gravar ali não fecha missão nenhuma.
       if (estado.aba === 'treino' && estado.treino &&
@@ -1104,6 +1114,7 @@ function ligarEventos() {
   $('#aba-livre').addEventListener('click', () => trocarAba('livre'));
   $('#aba-completo').addEventListener('click', () => trocarAba('completo'));
   $('#aba-blocos').addEventListener('click', () => trocarAba('blocos'));
+  $('#aba-joystick').addEventListener('click', () => trocarAba('joystick'));
 
   /* some com a dica "role para baixo" assim que o aluno começa a rolar */
   $('#didatico').addEventListener('scroll', () => {

@@ -10,6 +10,7 @@
 <link rel="stylesheet" href="css/blocos.css?v=web1">
 <link rel="stylesheet" href="css/lego.css?v=web1">
 <link rel="stylesheet" href="css/microbit.css?v=web1">
+<link rel="stylesheet" href="css/joystick.css?v=joy1">
 <link rel="icon" href="assets/academy/logo.svg" type="image/svg+xml">
 </head>
 <body>
@@ -86,6 +87,7 @@
         <button class="aba" id="aba-livre"><svg class="ui-icon" aria-hidden="true"><use href="#ic-terminal"></use></svg> Editor C++</button>
         <button class="aba" id="aba-completo" hidden>Código completo</button>
         <button class="aba" id="aba-blocos" hidden>◆ Blocos</button>
+        <button class="aba" id="aba-joystick" hidden title="Transforme o Arduino em controle de jogo do PC">🎮 Joystick</button>
       </div>
 
     <button class="tb-btn" id="bt-compilar" title="Verificar — compila sem gravar (Ctrl+R)">
@@ -162,6 +164,51 @@
               <pre id="blocos-codigo-saida"></pre>
               <div id="blocos-codigo-aviso" class="blocos-codigo-aviso"></div>
             </aside>
+          </div>
+
+          <!-- Joystick: sensores do Arduino viram teclas do PC (js/joystick.js) -->
+          <div id="area-joystick" hidden>
+            <div class="joy-cab">
+              <div class="joy-passos">
+                <span><b>1</b> Monte o controle</span>
+                <span><b>2</b> <em>Upload</em> no Arduino</span>
+                <span><b>3</b> Teste no Monitor</span>
+                <span><b>4</b> Baixe o pacote e abra o <em>Iniciar joystick.bat</em></span>
+              </div>
+              <button type="button" class="joy-bt" id="bt-joy-padrao" title="Voltar para o controle de 4 botões (setas)">↺ Padrão</button>
+              <button type="button" class="joy-bt primario" id="bt-joy-zip" title="gamepad.py + Iniciar joystick.bat + Joystick.ino">⬇ Baixar pacote (.zip)</button>
+            </div>
+            <div class="joy-corpo">
+              <aside class="joy-col joy-esq">
+                <div class="joy-tit">Adicionar sensor</div>
+                <div id="joy-paleta"></div>
+                <div class="joy-tit">Avisos</div>
+                <ul id="joy-msgs" aria-live="polite"></ul>
+              </aside>
+              <section class="joy-col" id="joy-lista" aria-label="Sensores do controle"></section>
+              <aside class="joy-col joy-dir">
+                <div class="joy-bloco">
+                  <div class="joy-tit">Teste ao vivo <button type="button" class="joy-bt mini" id="bt-joy-monitor">Testar no Monitor</button></div>
+                  <p id="joy-status" class="joy-status" role="status"></p>
+                  <div id="joy-teclas"></div>
+                </div>
+                <div class="joy-bloco joy-bloco-codigo">
+                  <div class="joy-tit">Código gerado
+                    <span class="joy-visoes" id="joy-visoes">
+                      <button type="button" data-visao="ino" aria-pressed="true">Joystick.ino</button>
+                      <button type="button" data-visao="py" aria-pressed="false">gamepad.py</button>
+                      <button type="button" data-visao="bat" aria-pressed="false">.bat</button>
+                    </span>
+                  </div>
+                  <pre id="joy-codigo" class="joy-codigo"></pre>
+                  <div class="joy-codigo-pe">
+                    <button type="button" class="joy-bt mini" id="bt-joy-copiar">Copiar</button>
+                    <button type="button" class="joy-bt mini" id="bt-joy-editor" title="Continuar editando o código à mão">Abrir no Editor C++</button>
+                  </div>
+                </div>
+              </aside>
+            </div>
+            <div id="joy-toast" class="joy-toast" role="status" aria-live="polite"></div>
           </div>
         </section>
 
@@ -379,9 +426,23 @@
   </div>
 </dialog>
 
+<dialog id="joy-dialogo-tecla" class="joy-dialogo" aria-labelledby="joy-dlg-tit">
+  <h3 id="joy-dlg-tit">🎹 Aperte a tecla do PC</h3>
+  <p>Aperte no teclado a tecla que o sensor vai apertar no jogo.</p>
+  <div id="joy-tecla-mostra" class="joy-tecla-mostra" tabindex="-1" autofocus><span class="ph">aperte uma tecla…</span></div>
+  <div class="joy-rapidas">
+    <span>Ou escolha:</span>
+    <button type="button" data-tecla-rapida="mouse_esq">🖱 Clique esquerdo</button>
+    <button type="button" data-tecla-rapida="mouse_dir">🖱 Clique direito</button>
+    <button type="button" data-tecla-rapida="space">Espaço</button>
+    <button type="button" data-tecla-rapida="enter">Enter</button>
+    <button type="button" data-tecla-rapida="">Nenhuma</button>
+  </div>
+  <div class="joy-dlg-pe"><button type="button" class="joy-bt" id="bt-joy-tecla-cancelar">Cancelar</button></div>
+</dialog>
 <script src="js/dados.js?v=web1"></script>
 <script src="js/k10.js?v=web1"></script>
-<script src="js/ide.js?v=web1"></script>
+<script src="js/ide.js?v=joy1"></script>
 <script src="js/monitor.js?v=web1"></script>
 <script src="js/barra.js?v=web1"></script>
 
@@ -427,7 +488,9 @@
 
 <script src="js/menus.js?v=web1"></script>
 <script src="js/academy.js?v=web1"></script>
-<script src="js/boards.js?v=web1"></script>
+<script src="js/boards.js?v=joy1"></script>
+<script src="js/joystick_gen.js?v=joy1"></script>
+<script src="js/joystick.js?v=joy1"></script>
 <!-- MIDE EDU web: compilador, gravação pela Web Serial e o "servidor" no navegador -->
 <script src="js/mide_compilador.js?v=web1"></script>
 <script src="js/mide_serial.js?v=web1"></script>

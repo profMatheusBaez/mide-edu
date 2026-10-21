@@ -1,0 +1,239 @@
+/* ============================================================
+ * joystick.css — aba "🎮 Joystick" da MIDE EDU
+ * Só variáveis de tema de estilo.css: funciona no claro e no escuro.
+ * ============================================================ */
+
+#area-joystick {
+  flex: 1 1 0; min-height: 0; min-width: 0;
+  overflow: hidden;
+  contain: size;           /* não deixa o conteúdo esticar o palco: cada coluna rola por dentro */
+  display: flex; flex-direction: column;
+  background: var(--bg);
+  position: relative;
+  font-family: var(--ui);
+}
+
+/* ---------- cabeçalho: passos + ações ---------- */
+.joy-cab {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 12px;
+  background: var(--painel);
+  border-bottom: 1px solid var(--borda);
+}
+.joy-passos { display: flex; flex-wrap: wrap; gap: 6px 14px; flex: 1; font-size: 12.5px; color: var(--txt2); }
+.joy-passos span { display: inline-flex; align-items: center; gap: 6px; }
+.joy-passos b {
+  display: inline-grid; place-items: center;
+  width: 20px; height: 20px; border-radius: 50%;
+  background: var(--teal); color: #fff; font-size: 11px;
+}
+.joy-passos em { font-style: normal; font-weight: 700; color: var(--txt); }
+
+.joy-bt {
+  border: 1px solid var(--borda2); background: var(--painel2); color: var(--txt);
+  border-radius: 7px; padding: 7px 12px; font-size: 12.5px; font-weight: 600; white-space: nowrap;
+}
+.joy-bt:hover { border-color: var(--teal); }
+.joy-bt.primario { background: var(--teal); border-color: var(--teal); color: #fff; }
+.joy-bt.primario:hover { background: var(--teal-escuro); }
+.joy-bt.mini { padding: 3px 9px; font-size: 11.5px; }
+
+/* ---------- corpo: paleta | sensores | teste + código ---------- */
+.joy-corpo {
+  flex: 1; min-height: 0;
+  display: grid;
+  grid-template-columns: 230px minmax(0, 1fr) minmax(280px, 34%);
+  grid-template-rows: minmax(0, 1fr);
+}
+.joy-col { min-height: 0; overflow: auto; padding: 12px; }
+.joy-esq { background: var(--painel); border-right: 1px solid var(--borda); }
+.joy-dir { background: var(--painel); border-left: 1px solid var(--borda); display: flex; flex-direction: column; gap: 12px; }
+
+.joy-tit {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em;
+  color: var(--txt2); margin: 2px 0 8px;
+}
+.joy-tit .joy-bt, .joy-tit .joy-visoes { margin-left: auto; text-transform: none; letter-spacing: 0; }
+.joy-esq .joy-tit + #joy-msgs { margin-top: 0; }
+#joy-paleta + .joy-tit { margin-top: 16px; }
+
+/* paleta de sensores */
+.joy-add {
+  display: flex; align-items: center; gap: 10px; width: 100%;
+  padding: 8px; margin-bottom: 8px; text-align: left;
+  border: 1px solid var(--borda); border-radius: 10px; background: var(--painel2);
+  transition: border-color .15s, transform .1s;
+}
+.joy-add:hover { border-color: var(--teal); }
+.joy-add:active { transform: scale(.98); }
+.joy-add img { width: 46px; height: 46px; border-radius: 9px; flex: none; }
+.joy-add span { display: flex; flex-direction: column; min-width: 0; }
+.joy-add b { font-size: 13.5px; }
+.joy-add small { font-size: 11.5px; color: var(--txt2); line-height: 1.3; }
+.joy-add .mais { margin-left: auto; font-size: 18px; color: var(--teal); font-weight: 700; }
+
+#joy-msgs { list-style: none; margin: 0; padding: 0; font-size: 12px; line-height: 1.4; }
+#joy-msgs li { padding: 6px 8px; border-radius: 6px; margin-bottom: 5px; background: var(--painel2); }
+#joy-msgs li.erro { color: var(--erro); border-left: 3px solid var(--erro); }
+#joy-msgs li.aviso { color: var(--aviso); border-left: 3px solid var(--aviso); }
+#joy-msgs li.ok { color: var(--ok); border-left: 3px solid var(--ok); }
+
+/* ---------- cartões de sensor ---------- */
+#joy-lista { display: flex; flex-direction: column; gap: 10px; align-content: start; }
+.joy-card {
+  background: var(--painel); border: 1px solid var(--borda); border-radius: 12px;
+  overflow: hidden; flex: none;
+}
+.joy-card.novo { animation: joy-chega .6s ease; }
+@keyframes joy-chega { from { box-shadow: 0 0 0 3px var(--teal-claro); } to { box-shadow: 0 0 0 0 transparent; } }
+.joy-card header {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 10px; background: var(--painel2); border-bottom: 1px solid var(--borda);
+}
+.joy-card header img { width: 38px; height: 38px; border-radius: 8px; flex: none; }
+.joy-card-tit { display: flex; flex-direction: column; min-width: 0; flex: 1; }
+.joy-card-tit b { font-size: 14px; }
+.joy-card-tit small { font-size: 11.5px; color: var(--txt3); line-height: 1.3; }
+.joy-card-corpo { padding: 10px 12px; display: flex; flex-direction: column; gap: 8px; }
+
+.joy-linha { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+.joy-rot { width: 78px; flex: none; font-size: 12px; color: var(--txt2); }
+.joy-rot.curto { width: auto; margin-left: 10px; }
+.joy-frase { margin: 2px 0 0; font-size: 12px; color: var(--txt2); line-height: 1.45; }
+.joy-frase b { color: var(--txt); }
+
+.joy-sel, .joy-num-in {
+  background: var(--editor); color: var(--txt);
+  border: 1px solid var(--borda2); border-radius: 6px;
+  padding: 5px 7px; font: inherit; font-size: 12.5px;
+}
+.joy-num-in { width: 66px; }
+.joy-sel:focus, .joy-num-in:focus { outline: 2px solid var(--teal-claro); outline-offset: 0; border-color: var(--teal); }
+.joy-ms { font-size: 12px; color: var(--txt2); display: inline-flex; align-items: center; gap: 5px; }
+
+.joy-alterna { display: inline-flex; border: 1px solid var(--borda2); border-radius: 7px; overflow: hidden; }
+.joy-alterna button { border: 0; background: var(--painel2); padding: 5px 11px; font-size: 12px; color: var(--txt2); }
+.joy-alterna button + button { border-left: 1px solid var(--borda2); }
+.joy-alterna button[aria-pressed="true"] { background: var(--teal); color: #fff; }
+
+.joy-tecla {
+  min-width: 74px; padding: 5px 12px; border-radius: 7px;
+  font-family: var(--mono); font-size: 13px; font-weight: 700;
+  color: var(--cod-func); background: var(--cod-bg);
+  border: 1px solid var(--borda2); border-bottom-width: 3px;
+}
+.joy-tecla:hover { border-color: var(--teal); }
+.joy-tecla.vazia { color: var(--txt3); font-family: var(--ui); font-weight: 500; font-size: 12px; border-style: dashed; border-bottom-width: 1px; }
+
+.joy-num {
+  display: inline-grid; place-items: center; min-width: 30px; height: 22px; padding: 0 5px;
+  border-radius: 11px; font-size: 11px; font-weight: 700; font-family: var(--mono);
+  background: var(--painel2); color: var(--txt2); border: 1px solid var(--borda);
+  transition: background .1s, color .1s;
+}
+.joy-num.vazio { opacity: .5; }
+.joy-num.ligada { background: var(--ok); color: #fff; border-color: var(--ok); }
+
+.joy-faixas { border: 1px solid var(--borda); border-radius: 9px; padding: 8px; background: var(--painel2); }
+.joy-faixas-cab { font-size: 11.5px; color: var(--txt2); margin-bottom: 6px; }
+.joy-faixa { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; padding: 4px 0; font-size: 12px; color: var(--txt2); }
+.joy-faixa + .joy-faixa { border-top: 1px dashed var(--borda); }
+.joy-faixa label { display: inline-flex; align-items: center; gap: 4px; }
+.joy-seta { color: var(--txt3); }
+.joy-faixas-pe { display: flex; gap: 6px; margin-top: 6px; }
+.joy-mais {
+  border: 1px dashed var(--borda2); background: transparent; color: var(--txt2);
+  border-radius: 6px; padding: 4px 10px; font-size: 12px;
+}
+.joy-mais:hover { border-color: var(--teal); color: var(--teal); }
+
+.joy-x {
+  border: 1px solid transparent; background: transparent; color: var(--txt3);
+  width: 26px; height: 26px; border-radius: 6px; flex: none;
+}
+.joy-x:hover { color: var(--erro); border-color: var(--erro); }
+.joy-card header .joy-x { margin-left: auto; }
+
+.joy-vazio { font-size: 12px; color: var(--txt3); margin: 4px 0; }
+.joy-inicio { margin: auto; text-align: center; color: var(--txt2); max-width: 320px; padding: 30px 0; }
+.joy-inicio img { width: 84px; height: 84px; border-radius: 16px; opacity: .85; }
+.joy-inicio h3 { margin: 10px 0 4px; color: var(--txt); }
+.joy-inicio p { margin: 0; font-size: 13px; line-height: 1.5; }
+
+/* ---------- teste ao vivo ---------- */
+.joy-status { margin: 0 0 8px; font-size: 12px; color: var(--txt2); padding: 6px 8px; border-radius: 6px; background: var(--painel2); }
+.joy-status.ligado { color: var(--ok); }
+#joy-teclas { display: flex; flex-wrap: wrap; gap: 8px; }
+.joy-key {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  min-width: 70px; padding: 8px 8px 6px; border-radius: 9px;
+  background: var(--cod-bg); border: 1px solid var(--borda2); border-bottom-width: 4px;
+  transition: transform .06s, background .1s, border-color .1s;
+}
+.joy-key .k { font-family: var(--mono); font-size: 15px; font-weight: 800; color: var(--txt); }
+.joy-key small { font-size: 10px; color: var(--txt3); max-width: 110px; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.joy-key.ligada { background: var(--teal); border-color: var(--teal-escuro); transform: translateY(3px); border-bottom-width: 1px; }
+.joy-key.ligada .k, .joy-key.ligada small { color: #fff; }
+.joy-key.pisca { animation: joy-pisca .35s ease; }
+@keyframes joy-pisca { 0% { box-shadow: 0 0 0 4px var(--teal-claro); } 100% { box-shadow: 0 0 0 0 transparent; } }
+
+/* ---------- código gerado ---------- */
+.joy-bloco-codigo { flex: 1; min-height: 220px; display: flex; flex-direction: column; }
+.joy-visoes { display: inline-flex; border: 1px solid var(--borda2); border-radius: 6px; overflow: hidden; }
+.joy-visoes button { border: 0; background: var(--painel2); padding: 3px 8px; font-size: 11px; color: var(--txt2); }
+.joy-visoes button + button { border-left: 1px solid var(--borda2); }
+.joy-visoes button[aria-pressed="true"] { background: var(--teal); color: #fff; }
+.joy-codigo {
+  flex: 1; min-height: 0; margin: 0; overflow: auto;
+  padding: 10px 12px; border-radius: 8px; border: 1px solid var(--borda);
+  background: var(--cod-bg); color: var(--cod-base);
+  font-family: var(--mono); font-size: 12px; line-height: 1.55; white-space: pre;
+}
+.joy-codigo-pe { display: flex; gap: 6px; margin-top: 6px; }
+
+/* ---------- aviso flutuante ---------- */
+.joy-toast {
+  position: absolute; left: 50%; bottom: 14px; transform: translate(-50%, 20px);
+  background: var(--painel); color: var(--txt); border: 1px solid var(--teal);
+  border-radius: 8px; padding: 8px 14px; font-size: 12.5px; box-shadow: var(--sombra);
+  opacity: 0; pointer-events: none; transition: opacity .2s, transform .2s;
+}
+.joy-toast.mostra { opacity: 1; transform: translate(-50%, 0); }
+
+/* ---------- diálogo da tecla ---------- */
+.joy-dialogo {
+  border: 2px solid var(--teal); border-radius: 14px; padding: 22px 26px;
+  background: var(--painel); color: var(--txt); font-family: var(--ui);
+  box-shadow: var(--sombra); max-width: 460px; text-align: center;
+}
+.joy-dialogo::backdrop { background: rgba(0, 0, 0, .55); }
+.joy-dialogo h3 { margin: 0 0 4px; }
+.joy-dialogo p { margin: 0 0 14px; font-size: 13px; color: var(--txt2); }
+.joy-tecla-mostra {
+  font-family: var(--mono); font-size: 40px; font-weight: 800; color: var(--teal);
+  min-height: 70px; display: grid; place-items: center;
+  border: 2px dashed var(--borda2); border-radius: 10px; margin-bottom: 14px; outline: none;
+}
+.joy-tecla-mostra .ph { font-family: var(--ui); font-size: 14px; font-weight: 500; color: var(--txt3); }
+.joy-rapidas { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; align-items: center; font-size: 12px; color: var(--txt2); }
+.joy-rapidas button { border: 1px solid var(--borda2); background: var(--painel2); border-radius: 6px; padding: 4px 9px; font-size: 12px; }
+.joy-rapidas button:hover { border-color: var(--teal); }
+.joy-dlg-pe { margin-top: 16px; }
+
+/* ---------- telas menores ---------- */
+@media (max-width: 1180px) {
+  .joy-corpo { grid-template-columns: 200px minmax(0, 1fr); grid-template-rows: minmax(0, 3fr) minmax(0, 2fr); }
+  .joy-dir { grid-column: 1 / -1; border-left: 0; border-top: 1px solid var(--borda); flex-direction: row; }
+  .joy-dir .joy-bloco { overflow: auto; }
+  .joy-bloco-codigo { min-height: 0; }
+  .joy-passos span:not(:first-child) { display: none; }
+  .joy-dir .joy-bloco { flex: 1; min-width: 0; }
+  .joy-add img { width: 36px; height: 36px; }
+}
+@media (max-width: 760px) {
+  .joy-corpo { display: flex; flex-direction: column; overflow: auto; }
+  .joy-col { overflow: visible; }
+  .joy-dir { flex-direction: column; max-height: none; }
+  .joy-passos { display: none; }
+}
