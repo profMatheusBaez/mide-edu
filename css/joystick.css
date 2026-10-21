@@ -1,196 +1,148 @@
 /* ============================================================
  * joystick.css — aba "🎮 Joystick" da MIDE EDU
- * Só variáveis de tema de estilo.css: funciona no claro e no escuro.
+ * Tela enxuta: uma barra + cartões. Só variáveis de tema de
+ * estilo.css (claro e escuro).
  * ============================================================ */
+
+/* Na aba Joystick o currículo some e a aba usa a largura toda. */
+body.joy-ativo #corpo { grid-template-columns: minmax(0, 1fr) !important; }
+body.joy-ativo #lateral { display: none !important; }
 
 #area-joystick {
   flex: 1 1 0; min-height: 0; min-width: 0;
   overflow: hidden;
-  contain: size;           /* não deixa o conteúdo esticar o palco: cada coluna rola por dentro */
+  contain: size;           /* não deixa o conteúdo esticar o palco: a lista rola por dentro */
   display: flex; flex-direction: column;
   background: var(--bg);
   position: relative;
   font-family: var(--ui);
 }
 
-/* ---------- cabeçalho: passos + ações ---------- */
-.joy-cab {
-  display: flex; align-items: center; gap: 10px;
+/* ---------- barra ---------- */
+.joy-barra {
+  display: flex; align-items: center; flex-wrap: wrap; gap: 8px;
   padding: 8px 12px;
   background: var(--painel);
   border-bottom: 1px solid var(--borda);
 }
-.joy-passos { display: flex; flex-wrap: wrap; gap: 6px 14px; flex: 1; font-size: 12.5px; color: var(--txt2); }
-.joy-passos span { display: inline-flex; align-items: center; gap: 6px; }
-.joy-passos b {
-  display: inline-grid; place-items: center;
-  width: 20px; height: 20px; border-radius: 50%;
-  background: var(--teal); color: #fff; font-size: 11px;
+.joy-espaco { flex: 1; }
+.joy-paleta { display: flex; flex-wrap: wrap; gap: 6px; }
+.joy-add {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 4px 10px 4px 4px; border-radius: 9px;
+  border: 1px solid var(--borda); background: var(--painel2);
+  font-size: 13px; font-weight: 600;
 }
-.joy-passos em { font-style: normal; font-weight: 700; color: var(--txt); }
+.joy-add:hover { border-color: var(--teal); }
+.joy-add img { width: 28px; height: 28px; border-radius: 6px; }
+.joy-add b { color: var(--teal); font-size: 15px; }
 
 .joy-bt {
   border: 1px solid var(--borda2); background: var(--painel2); color: var(--txt);
-  border-radius: 7px; padding: 7px 12px; font-size: 12.5px; font-weight: 600; white-space: nowrap;
+  border-radius: 8px; padding: 6px 12px; font-size: 12.5px; font-weight: 600; white-space: nowrap;
 }
 .joy-bt:hover { border-color: var(--teal); }
 .joy-bt.primario { background: var(--teal); border-color: var(--teal); color: #fff; }
 .joy-bt.primario:hover { background: var(--teal-escuro); }
-.joy-bt.mini { padding: 3px 9px; font-size: 11.5px; }
+.joy-bt.icone { padding: 6px 9px; }
+.joy-bt.ligado { border-color: var(--ok); color: var(--ok); }
 
-/* ---------- corpo: paleta | sensores | teste + código ---------- */
-.joy-corpo {
-  flex: 1; min-height: 0;
-  display: grid;
-  grid-template-columns: 230px minmax(0, 1fr) minmax(280px, 34%);
-  grid-template-rows: minmax(0, 1fr);
+.joy-estado {
+  font-size: 12px; font-weight: 600; color: var(--txt2);
+  padding: 4px 10px; border-radius: 99px; background: var(--painel2);
 }
-.joy-col { min-height: 0; overflow: auto; padding: 12px; }
-.joy-esq { background: var(--painel); border-right: 1px solid var(--borda); }
-.joy-dir { background: var(--painel); border-left: 1px solid var(--borda); display: flex; flex-direction: column; gap: 12px; }
+.joy-estado::before { content: '●'; margin-right: 6px; font-size: 10px; color: var(--txt3); }
+.joy-estado.ok { color: var(--ok); }      .joy-estado.ok::before { color: var(--ok); }
+.joy-estado.ligado { color: var(--ok); }  .joy-estado.ligado::before { color: var(--ok); animation: joy-pulso 1.2s infinite; }
+.joy-estado.aviso { color: var(--aviso); } .joy-estado.aviso::before { color: var(--aviso); }
+.joy-estado.erro { color: var(--erro); }  .joy-estado.erro::before { color: var(--erro); }
+@keyframes joy-pulso { 50% { opacity: .25; } }
 
-.joy-tit {
-  display: flex; align-items: center; gap: 8px;
-  font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em;
-  color: var(--txt2); margin: 2px 0 8px;
+.joy-avisos { padding: 6px 14px 0; }
+
+/* ---------- cartões ---------- */
+#joy-lista {
+  flex: 1; min-height: 0; overflow: auto;
+  padding: 12px;
+  display: grid; gap: 12px;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  align-content: start; align-items: start;
 }
-.joy-tit .joy-bt, .joy-tit .joy-visoes { margin-left: auto; text-transform: none; letter-spacing: 0; }
-.joy-esq .joy-tit + #joy-msgs { margin-top: 0; }
-#joy-paleta + .joy-tit { margin-top: 16px; }
-
-/* paleta de sensores */
-.joy-add {
-  display: flex; align-items: center; gap: 10px; width: 100%;
-  padding: 8px; margin-bottom: 8px; text-align: left;
-  border: 1px solid var(--borda); border-radius: 10px; background: var(--painel2);
-  transition: border-color .15s, transform .1s;
-}
-.joy-add:hover { border-color: var(--teal); }
-.joy-add:active { transform: scale(.98); }
-.joy-add img { width: 46px; height: 46px; border-radius: 9px; flex: none; }
-.joy-add span { display: flex; flex-direction: column; min-width: 0; }
-.joy-add b { font-size: 13.5px; }
-.joy-add small { font-size: 11.5px; color: var(--txt2); line-height: 1.3; }
-.joy-add .mais { margin-left: auto; font-size: 18px; color: var(--teal); font-weight: 700; }
-
-#joy-msgs { list-style: none; margin: 0; padding: 0; font-size: 12px; line-height: 1.4; }
-#joy-msgs li { padding: 6px 8px; border-radius: 6px; margin-bottom: 5px; background: var(--painel2); }
-#joy-msgs li.erro { color: var(--erro); border-left: 3px solid var(--erro); }
-#joy-msgs li.aviso { color: var(--aviso); border-left: 3px solid var(--aviso); }
-#joy-msgs li.ok { color: var(--ok); border-left: 3px solid var(--ok); }
-
-/* ---------- cartões de sensor ---------- */
-#joy-lista { display: flex; flex-direction: column; gap: 10px; align-content: start; }
 .joy-card {
   background: var(--painel); border: 1px solid var(--borda); border-radius: 12px;
-  overflow: hidden; flex: none;
+  display: flex; flex-direction: column;
 }
 .joy-card.novo { animation: joy-chega .6s ease; }
 @keyframes joy-chega { from { box-shadow: 0 0 0 3px var(--teal-claro); } to { box-shadow: 0 0 0 0 transparent; } }
-.joy-card header {
-  display: flex; align-items: center; gap: 10px;
-  padding: 8px 10px; background: var(--painel2); border-bottom: 1px solid var(--borda);
-}
-.joy-card header img { width: 38px; height: 38px; border-radius: 8px; flex: none; }
-.joy-card-tit { display: flex; flex-direction: column; min-width: 0; flex: 1; }
-.joy-card-tit b { font-size: 14px; }
-.joy-card-tit small { font-size: 11.5px; color: var(--txt3); line-height: 1.3; }
-.joy-card-corpo { padding: 10px 12px; display: flex; flex-direction: column; gap: 8px; }
+.joy-card header { display: flex; align-items: center; gap: 8px; padding: 8px 8px 0 10px; }
+.joy-card header img { width: 30px; height: 30px; border-radius: 7px; flex: none; }
+.joy-card header b { font-size: 14px; white-space: nowrap; cursor: help; }
+.joy-pinos { display: flex; gap: 4px; margin-left: auto; }
+.joy-pinos:empty + .joy-x, .joy-card header .joy-x:only-of-type { margin-left: auto; }
+.joy-card-corpo { padding: 8px 10px 10px; display: flex; flex-direction: column; gap: 7px; }
+.joy-card-msgs:empty { display: none; }
+.joy-card-msgs { padding: 0 10px 8px; }
 
 .joy-linha { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
-.joy-rot { width: 78px; flex: none; font-size: 12px; color: var(--txt2); }
-.joy-rot.curto { width: auto; margin-left: 10px; }
-.joy-frase { margin: 2px 0 0; font-size: 12px; color: var(--txt2); line-height: 1.45; }
-.joy-frase b { color: var(--txt); }
+.joy-rot { min-width: 84px; font-size: 12px; color: var(--txt2); }
 
 .joy-sel, .joy-num-in {
   background: var(--editor); color: var(--txt);
-  border: 1px solid var(--borda2); border-radius: 6px;
-  padding: 5px 7px; font: inherit; font-size: 12.5px;
+  border: 1px solid var(--borda); border-radius: 6px;
+  padding: 3px 5px; font: inherit; font-size: 12px;
 }
-.joy-num-in { width: 66px; }
+.joy-pino { font-family: var(--mono); font-size: 11.5px; width: auto; flex: none; }
+.joy-pin-rot { display: inline-flex; align-items: center; gap: 4px; margin-right: 6px; font-size: 10.5px; font-weight: 700; color: var(--txt3); }
+.joy-num-in { width: 54px; text-align: right; -moz-appearance: textfield; appearance: textfield; }
+.joy-num-in::-webkit-inner-spin-button, .joy-num-in::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
 .joy-sel:focus, .joy-num-in:focus { outline: 2px solid var(--teal-claro); outline-offset: 0; border-color: var(--teal); }
-.joy-ms { font-size: 12px; color: var(--txt2); display: inline-flex; align-items: center; gap: 5px; }
+.joy-ms { font-size: 12px; color: var(--txt2); display: inline-flex; align-items: center; gap: 4px; }
 
-.joy-alterna { display: inline-flex; border: 1px solid var(--borda2); border-radius: 7px; overflow: hidden; }
-.joy-alterna button { border: 0; background: var(--painel2); padding: 5px 11px; font-size: 12px; color: var(--txt2); }
-.joy-alterna button + button { border-left: 1px solid var(--borda2); }
-.joy-alterna button[aria-pressed="true"] { background: var(--teal); color: #fff; }
+.joy-seg { display: flex; border: 1px solid var(--borda); border-radius: 8px; overflow: hidden; }
+.joy-seg button { flex: 1; border: 0; background: var(--painel2); padding: 5px 4px; font-size: 11.5px; color: var(--txt2); }
+.joy-seg button + button { border-left: 1px solid var(--borda); }
+.joy-seg button[aria-pressed="true"] { background: var(--teal); color: #fff; font-weight: 700; }
 
 .joy-tecla {
-  min-width: 74px; padding: 5px 12px; border-radius: 7px;
-  font-family: var(--mono); font-size: 13px; font-weight: 700;
-  color: var(--cod-func); background: var(--cod-bg);
+  min-width: 62px; padding: 3px 10px; border-radius: 7px;
+  font-family: var(--mono); font-size: 13px; font-weight: 800;
+  color: var(--txt); background: var(--cod-bg);
   border: 1px solid var(--borda2); border-bottom-width: 3px;
+  transition: transform .06s, background .1s;
 }
 .joy-tecla:hover { border-color: var(--teal); }
-.joy-tecla.vazia { color: var(--txt3); font-family: var(--ui); font-weight: 500; font-size: 12px; border-style: dashed; border-bottom-width: 1px; }
+.joy-tecla.vazia { color: var(--txt3); font-family: var(--ui); font-weight: 500; font-size: 11.5px; border-style: dashed; border-bottom-width: 1px; }
+.joy-tecla.ligada { background: var(--ok); border-color: var(--ok); color: #fff; transform: translateY(2px); border-bottom-width: 1px; }
+.joy-tecla.pisca { animation: joy-pisca .35s ease; }
+@keyframes joy-pisca { 0% { box-shadow: 0 0 0 4px var(--teal-claro); } 100% { box-shadow: 0 0 0 0 transparent; } }
 
-.joy-num {
-  display: inline-grid; place-items: center; min-width: 30px; height: 22px; padding: 0 5px;
-  border-radius: 11px; font-size: 11px; font-weight: 700; font-family: var(--mono);
-  background: var(--painel2); color: var(--txt2); border: 1px solid var(--borda);
-  transition: background .1s, color .1s;
-}
-.joy-num.vazio { opacity: .5; }
-.joy-num.ligada { background: var(--ok); color: #fff; border-color: var(--ok); }
-
-.joy-faixas { border: 1px solid var(--borda); border-radius: 9px; padding: 8px; background: var(--painel2); }
-.joy-faixas-cab { font-size: 11.5px; color: var(--txt2); margin-bottom: 6px; }
-.joy-faixa { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; padding: 4px 0; font-size: 12px; color: var(--txt2); }
-.joy-faixa + .joy-faixa { border-top: 1px dashed var(--borda); }
-.joy-faixa label { display: inline-flex; align-items: center; gap: 4px; }
-.joy-seta { color: var(--txt3); }
-.joy-faixas-pe { display: flex; gap: 6px; margin-top: 6px; }
+.joy-faixa { display: flex; align-items: center; gap: 5px; font-size: 12px; color: var(--txt3); }
+.joy-faixas-cab { display: flex; font-size: 11px; color: var(--txt3); margin-bottom: -2px; }
+.joy-faixa .joy-num-in { width: 50px; }
+.joy-faixa .joy-tecla { margin-left: 6px; min-width: 56px; }
+.joy-modo { margin-left: auto; }
+.joy-faixas-pe { display: flex; gap: 6px; }
 .joy-mais {
   border: 1px dashed var(--borda2); background: transparent; color: var(--txt2);
-  border-radius: 6px; padding: 4px 10px; font-size: 12px;
+  border-radius: 6px; padding: 2px 9px; font-size: 11.5px;
 }
 .joy-mais:hover { border-color: var(--teal); color: var(--teal); }
 
 .joy-x {
-  border: 1px solid transparent; background: transparent; color: var(--txt3);
-  width: 26px; height: 26px; border-radius: 6px; flex: none;
+  border: 0; background: transparent; color: var(--txt3);
+  width: 22px; height: 22px; border-radius: 5px; flex: none; font-size: 12px; padding: 0;
 }
-.joy-x:hover { color: var(--erro); border-color: var(--erro); }
-.joy-card header .joy-x { margin-left: auto; }
+.joy-x:hover { color: var(--erro); background: var(--hover); }
 
-.joy-vazio { font-size: 12px; color: var(--txt3); margin: 4px 0; }
-.joy-inicio { margin: auto; text-align: center; color: var(--txt2); max-width: 320px; padding: 30px 0; }
-.joy-inicio img { width: 84px; height: 84px; border-radius: 16px; opacity: .85; }
+.joy-msg { margin: 2px 0; font-size: 11.5px; line-height: 1.35; }
+.joy-msg.erro { color: var(--erro); }
+.joy-msg.aviso { color: var(--aviso); }
+
+.joy-vazio { font-size: 12px; color: var(--txt3); margin: 0; }
+.joy-inicio { grid-column: 1 / -1; margin: 40px auto; text-align: center; color: var(--txt2); max-width: 320px; }
+.joy-inicio img { width: 72px; height: 72px; border-radius: 14px; opacity: .85; }
 .joy-inicio h3 { margin: 10px 0 4px; color: var(--txt); }
 .joy-inicio p { margin: 0; font-size: 13px; line-height: 1.5; }
-
-/* ---------- teste ao vivo ---------- */
-.joy-status { margin: 0 0 8px; font-size: 12px; color: var(--txt2); padding: 6px 8px; border-radius: 6px; background: var(--painel2); }
-.joy-status.ligado { color: var(--ok); }
-#joy-teclas { display: flex; flex-wrap: wrap; gap: 8px; }
-.joy-key {
-  display: flex; flex-direction: column; align-items: center; justify-content: center;
-  min-width: 70px; padding: 8px 8px 6px; border-radius: 9px;
-  background: var(--cod-bg); border: 1px solid var(--borda2); border-bottom-width: 4px;
-  transition: transform .06s, background .1s, border-color .1s;
-}
-.joy-key .k { font-family: var(--mono); font-size: 15px; font-weight: 800; color: var(--txt); }
-.joy-key small { font-size: 10px; color: var(--txt3); max-width: 110px; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.joy-key.ligada { background: var(--teal); border-color: var(--teal-escuro); transform: translateY(3px); border-bottom-width: 1px; }
-.joy-key.ligada .k, .joy-key.ligada small { color: #fff; }
-.joy-key.pisca { animation: joy-pisca .35s ease; }
-@keyframes joy-pisca { 0% { box-shadow: 0 0 0 4px var(--teal-claro); } 100% { box-shadow: 0 0 0 0 transparent; } }
-
-/* ---------- código gerado ---------- */
-.joy-bloco-codigo { flex: 1; min-height: 220px; display: flex; flex-direction: column; }
-.joy-visoes { display: inline-flex; border: 1px solid var(--borda2); border-radius: 6px; overflow: hidden; }
-.joy-visoes button { border: 0; background: var(--painel2); padding: 3px 8px; font-size: 11px; color: var(--txt2); }
-.joy-visoes button + button { border-left: 1px solid var(--borda2); }
-.joy-visoes button[aria-pressed="true"] { background: var(--teal); color: #fff; }
-.joy-codigo {
-  flex: 1; min-height: 0; margin: 0; overflow: auto;
-  padding: 10px 12px; border-radius: 8px; border: 1px solid var(--borda);
-  background: var(--cod-bg); color: var(--cod-base);
-  font-family: var(--mono); font-size: 12px; line-height: 1.55; white-space: pre;
-}
-.joy-codigo-pe { display: flex; gap: 6px; margin-top: 6px; }
 
 /* ---------- aviso flutuante ---------- */
 .joy-toast {
@@ -201,13 +153,13 @@
 }
 .joy-toast.mostra { opacity: 1; transform: translate(-50%, 0); }
 
-/* ---------- diálogo da tecla ---------- */
+/* ---------- diálogos ---------- */
 .joy-dialogo {
-  border: 2px solid var(--teal); border-radius: 14px; padding: 22px 26px;
+  border: 1px solid var(--borda2); border-radius: 14px; padding: 22px 26px;
   background: var(--painel); color: var(--txt); font-family: var(--ui);
   box-shadow: var(--sombra); max-width: 460px; text-align: center;
 }
-.joy-dialogo::backdrop { background: rgba(0, 0, 0, .55); }
+.joy-dialogo::backdrop { background: rgba(0, 0, 0, .5); }
 .joy-dialogo h3 { margin: 0 0 4px; }
 .joy-dialogo p { margin: 0 0 14px; font-size: 13px; color: var(--txt2); }
 .joy-tecla-mostra {
@@ -221,19 +173,25 @@
 .joy-rapidas button:hover { border-color: var(--teal); }
 .joy-dlg-pe { margin-top: 16px; }
 
-/* ---------- telas menores ---------- */
-@media (max-width: 1180px) {
-  .joy-corpo { grid-template-columns: 200px minmax(0, 1fr); grid-template-rows: minmax(0, 3fr) minmax(0, 2fr); }
-  .joy-dir { grid-column: 1 / -1; border-left: 0; border-top: 1px solid var(--borda); flex-direction: row; }
-  .joy-dir .joy-bloco { overflow: auto; }
-  .joy-bloco-codigo { min-height: 0; }
-  .joy-passos span:not(:first-child) { display: none; }
-  .joy-dir .joy-bloco { flex: 1; min-width: 0; }
-  .joy-add img { width: 36px; height: 36px; }
+.joy-dialogo-codigo {
+  width: min(900px, 92vw); max-width: none; height: min(640px, 86vh);
+  padding: 0; text-align: left; overflow: hidden;
 }
+.joy-dialogo-codigo[open] { display: flex; flex-direction: column; }
+.joy-dlg-cab { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-bottom: 1px solid var(--borda); background: var(--painel2); }
+.joy-visoes { display: inline-flex; border: 1px solid var(--borda2); border-radius: 8px; overflow: hidden; }
+.joy-visoes button { border: 0; background: var(--painel); padding: 5px 10px; font-size: 12px; color: var(--txt2); font-family: var(--mono); }
+.joy-visoes button + button { border-left: 1px solid var(--borda2); }
+.joy-visoes button[aria-pressed="true"] { background: var(--teal); color: #fff; }
+.joy-codigo {
+  flex: 1; min-height: 0; margin: 0; overflow: auto; padding: 14px 16px;
+  background: var(--cod-bg); color: var(--cod-base);
+  font-family: var(--mono); font-size: 12.5px; line-height: 1.6; white-space: pre;
+}
+
+/* ---------- telas menores ---------- */
 @media (max-width: 760px) {
-  .joy-corpo { display: flex; flex-direction: column; overflow: auto; }
-  .joy-col { overflow: visible; }
-  .joy-dir { flex-direction: column; max-height: none; }
-  .joy-passos { display: none; }
+  .joy-add span { display: none; }
+  .joy-add { padding: 4px; }
+  #joy-lista { grid-template-columns: 1fr; }
 }

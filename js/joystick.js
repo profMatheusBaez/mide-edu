@@ -6,9 +6,10 @@
  * PC e a IDE gera o Joystick.ino (gravado pelo Upload da barra),
  * o gamepad.py e o "Iniciar joystick.bat".
  *
- * O teste ao vivo lê as mensagens do Monitor Serial (A1_DOWN…) e
- * acende as teclas na tela — dá para conferir tudo antes de abrir
- * o jogo. O gerador fica em joystick_gen.js (sem DOM, testável).
+ * Tela enxuta: uma barra (adicionar sensor · estado · Testar ·
+ * Código · Pacote) e os cartões dos sensores. O código fica num
+ * diálogo; o teste ao vivo acende a própria tecla no cartão.
+ * O gerador fica em joystick_gen.js (sem DOM, testável).
  * ============================================================ */
 'use strict';
 
@@ -16,11 +17,10 @@ const JOY = {
   chave: 'mide_joystick_v1',
   config: null,
   gerado: null,
-  visao: 'ino',            // 'ino' | 'py' | 'bat'
+  visao: 'ino',            // 'ino' | 'py' | 'bat' (diálogo do código)
   ativas: new Set(),       // números das ações ligadas agora (teste ao vivo)
   conectado: false,
   alvoTecla: null,         // {uid, campo, faixa}
-  timerRender: null,
 };
 
 const ICONES_JOY = {
@@ -29,17 +29,11 @@ const ICONES_JOY = {
   pot: 'assets/icone_modulo_pot.png',
   led: 'assets/icone_modulo_led.png',
 };
-const DESC_JOY = {
-  botao: 'Toque curto, longo ou os dois',
-  ultra: 'Faixas de distância (cm)',
-  pot: 'Faixas de giro (0 a 1023)',
-  led: 'Acende junto com uma tecla',
-};
 const LIGACAO_JOY = {
-  botao: 'Uma perna do botão no pino, a outra no GND (o pull-up interno já está ligado).',
-  ultra: 'VCC no 5V, GND no GND, TRIG e ECHO nos pinos escolhidos.',
-  pot: 'Pernas das pontas no 5V e no GND, a perna do meio no pino analógico.',
-  led: 'Pino → resistor de 220 Ω → perna longa do LED; perna curta no GND.',
+  botao: 'Ligação: uma perna do botão no pino, a outra no GND.',
+  ultra: 'Ligação: VCC no 5V, GND no GND, TRIG e ECHO nos pinos escolhidos.',
+  pot: 'Ligação: pernas das pontas no 5V e no GND, a do meio no pino analógico.',
+  led: 'Ligação: pino → resistor de 220 Ω → perna longa do LED; perna curta no GND.',
 };
 
 const escJ = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -51,7 +45,7 @@ const novoUid = () => 's' + Math.random().toString(36).slice(2, 9);
 function joyCarregar() {
   try {
     const c = JSON.parse(localStorage.getItem(JOY.chave) || 'null');
-    if (c && Array.isArray(c.sensores)) { JOY.config = c; }
+    if (c && Array.isArray(c.sensores)) JOY.config = c;
   } catch (e) { /* storage indisponível */ }
   if (!JOY.config) JOY.config = JoystickGen.configPadrao();
   JOY.config.sensores.forEach((s) => { if (!s.uid) s.uid = novoUid(); });
@@ -105,12 +99,11 @@ function joyAdicionar(tipo) {
   joyMudou();
   requestAnimationFrame(() => {
     const el = document.querySelector(`#joy-lista [data-uid="${s.uid}"]`);
-    if (el) {
-      // rola só a lista (scrollIntoView rolaria também a página, que tem overflow escondido)
-      const lista = $('#joy-lista');
-      lista.scrollTo({ top: el.offsetTop - lista.offsetTop - 8, behavior: 'smooth' });
-      el.classList.add('novo');
-    }
+    if (!el) return;
+    // rola só a lista (scrollIntoView rolaria também a página, que tem overflow escondido)
+    const lista = $('#joy-lista');
+    lista.scrollTo({ top: el.offsetTop - lista.offsetTop - 8, behavior: 'smooth' });
+    el.classList.add('novo');
   });
 }
 
@@ -129,148 +122,162 @@ function joyMudou(semRelista) {
   joySalvar();
   JOY.gerado = JoystickGen.gerar(JOY.config);
   if (!semRelista) joyRenderLista();
-  joyRenderLado();
+  else joyRenderAvisosDosCartoes();
+  joyRenderBarra();
+  if (!$('#joy-dialogo-codigo').open) { /* nada */ } else joyRenderCodigo();
   if (typeof atualizarBotoes === 'function') atualizarBotoes();
 }
 
-function joyPill(tecla, attrs) {
+/* Botão de tecla. data-num liga a tecla ao teste ao vivo (acende quando a ação começa). */
+function joyPill(tecla, attrs, num) {
   const vazio = !tecla;
-  return `<button type="button" class="joy-tecla${vazio ? ' vazia' : ''}" ${attrs} title="Clique e aperte a tecla do PC">${vazio ? '+ tecla' : escJ(JoystickGen.rotuloTecla(tecla))}</button>`;
+  const ligada = num && JOY.ativas.has(num) ? ' ligada' : '';
+  return `<button type="button" class="joy-tecla${vazio ? ' vazia' : ''}${ligada}" ${attrs}${num ? ` data-num="${num}"` : ''} title="Clique e aperte a tecla do PC">${vazio ? 'tecla?' : escJ(JoystickGen.rotuloTecla(tecla))}</button>`;
 }
 
-function joySelectPino(valor, uid, campo, analogico, extraUsados) {
+function joySelectPino(valor, uid, campo, analogico, extraUsados, rotulo) {
   const usados = joyPinosUsados(uid);
   (extraUsados || []).forEach((p) => usados.add(String(p)));
   const lista = analogico ? JoystickGen.PINOS_ANALOGICOS : JoystickGen.PINOS_DIGITAIS;
   const ops = lista.map((p) => {
     const ocupado = usados.has(String(p)) && String(p) !== String(valor);
-    return `<option value="${p}"${String(p) === String(valor) ? ' selected' : ''}${ocupado ? ' disabled' : ''}>${analogico ? p : 'D' + p}${ocupado ? ' (em uso)' : ''}</option>`;
+    return `<option value="${p}"${String(p) === String(valor) ? ' selected' : ''}${ocupado ? ' disabled' : ''}>${analogico ? p : 'D' + p}</option>`;
   }).join('');
-  return `<select class="joy-sel" data-campo="${campo}" aria-label="Pino">${ops}</select>`;
+  const sel = `<select class="joy-sel joy-pino" data-campo="${campo}" aria-label="${rotulo || 'Pino'}" title="Pino do Arduino (os apagados já estão em uso)">${ops}</select>`;
+  return rotulo ? `<label class="joy-pin-rot">${rotulo}${sel}</label>` : sel;
 }
 
-function joyFrase(s) {
-  const r = JoystickGen.rotuloTecla;
-  if (s.tipo === 'botao') {
-    const c = s.curto !== false, l = !!s.longo;
-    if (c && !l) return s.teclaCurto ? `Enquanto o botão estiver apertado, a tecla <b>${escJ(r(s.teclaCurto))}</b> fica apertada — igual ao teclado.` : 'Escolha a tecla.';
-    if (!c && l) return `Segurou ${s.msLongo} ms ou mais: <b>${escJ(r(s.teclaLongo))}</b> fica apertada até soltar. Toque rápido não faz nada.`;
-    if (c && l) return `Toque rápido (menos de ${s.msLongo} ms): <b>${escJ(r(s.teclaCurto))}</b> uma vez. Segurou: <b>${escJ(r(s.teclaLongo))}</b> fica apertada até soltar.`;
-    return 'Ligue "curto", "longo" ou os dois.';
-  }
-  return '';
+/* Mensagens do gerador que são deste sensor ("Botão 1: …", "Botão 1, faixa 2: …"). */
+function joyMsgsDoSensor(nome) {
+  const g = JOY.gerado;
+  const deste = (m) => m.startsWith(nome + ':') || m.startsWith(nome + ',');
+  const limpa = (m) => m.slice(nome.length).replace(/^[:,]\s*/, '');
+  return [
+    ...g.erros.filter(deste).map((m) => ({ tipo: 'erro', texto: limpa(m) })),
+    ...g.avisos.filter(deste).map((m) => ({ tipo: 'aviso', texto: limpa(m) })),
+  ];
+}
+function joyHtmlMsgs(nome) {
+  const ms = joyMsgsDoSensor(nome);
+  if (!ms.length) return '';
+  return ms.map((m) => `<p class="joy-msg ${m.tipo}">${m.tipo === 'erro' ? '✗' : '!'} ${escJ(m.texto)}</p>`).join('');
 }
 
-function joyRenderFaixas(s) {
-  const lim = s.tipo === 'ultra' ? 400 : 1023, un = s.tipo === 'ultra' ? 'cm' : '';
-  const acoes = JoystickGen.listarAcoes(JOY.config.sensores).itens.find((it) => it.s === s)?.acoes.faixas || [];
+function joyRenderFaixas(s, it) {
+  const lim = s.tipo === 'ultra' ? 400 : 1023;
+  const nums = it.acoes.faixas || [];
   const linhas = (s.faixas || []).map((f, i) => `
     <div class="joy-faixa" data-faixa="${i}">
-      ${acoes[i] ? `<span class="joy-num" data-num="${acoes[i]}">A${acoes[i]}</span>` : '<span class="joy-num vazio">—</span>'}
-      <label>de <input type="number" class="joy-num-in" data-campo="min" min="0" max="${lim}" value="${f.min}"></label>
-      <label>até <input type="number" class="joy-num-in" data-campo="max" min="0" max="${lim}" value="${f.max}"> ${un}</label>
-      <span class="joy-seta">→</span>
-      ${joyPill(f.tecla, `data-tecla="faixa" data-faixa="${i}"`)}
-      <select class="joy-sel" data-campo="modo" aria-label="Como apertar">
+      <input type="number" class="joy-num-in" data-campo="min" min="0" max="${lim}" value="${f.min}" aria-label="de">
+      <span class="joy-ate">a</span>
+      <input type="number" class="joy-num-in" data-campo="max" min="0" max="${lim}" value="${f.max}" aria-label="até">
+      ${joyPill(f.tecla, `data-tecla="faixa" data-faixa="${i}"`, nums[i])}
+      <select class="joy-sel joy-modo" data-campo="modo" aria-label="Como apertar" title="segurar: fica apertada enquanto estiver na faixa · toque: aperta uma vez ao entrar">
         <option value="segurar"${f.modo !== 'toque' ? ' selected' : ''}>segurar</option>
         <option value="toque"${f.modo === 'toque' ? ' selected' : ''}>toque</option>
       </select>
       <button type="button" class="joy-x" data-acao="tirar-faixa" title="Tirar esta faixa" aria-label="Tirar esta faixa">✕</button>
     </div>`).join('');
   return `
-    <div class="joy-faixas">
-      <div class="joy-faixas-cab">${s.tipo === 'ultra' ? 'Distância (0 a 400 cm)' : 'Valor lido (0 a 1023)'} → tecla</div>
-      ${linhas || '<div class="joy-vazio">Nenhuma faixa ainda.</div>'}
-      <div class="joy-faixas-pe">
-        <button type="button" class="joy-mais" data-acao="mais-faixa">＋ Faixa</button>
-        ${s.tipo === 'pot' ? '<button type="button" class="joy-mais" data-acao="dividir">Dividir em 3 iguais</button>' : ''}
-      </div>
+    <div class="joy-faixas-cab">${s.tipo === 'ultra' ? 'Distância em cm' : 'Valor lido (0 a 1023)'} → tecla</div>
+    ${linhas || '<p class="joy-vazio">Nenhuma faixa.</p>'}
+    <div class="joy-faixas-pe">
+      <button type="button" class="joy-mais" data-acao="mais-faixa">＋ faixa</button>
+      ${s.tipo === 'pot' ? '<button type="button" class="joy-mais" data-acao="dividir">dividir em 3</button>' : ''}
     </div>`;
+}
+
+function joyModoBotao(s) {
+  const c = s.curto !== false, l = !!s.longo;
+  return c && l ? 'ambos' : (l ? 'longo' : 'curto');
+}
+
+function joyRenderCartao(it, usadas) {
+  const s = it.s;
+  let pinos = '', corpo = '';
+  if (s.tipo === 'botao') {
+    pinos = joySelectPino(s.pino, s.uid, 'pino', false);
+    const modo = joyModoBotao(s);
+    const seg = [['curto', 'Normal', 'A tecla fica apertada enquanto o botão estiver apertado'],
+                 ['longo', 'Segurar', 'Só conta se segurar o botão'],
+                 ['ambos', 'Curto + longo', 'Toque rápido = uma tecla; segurar = outra']]
+      .map(([v, r, t]) => `<button type="button" data-acao="modo-botao" data-modo="${v}" aria-pressed="${modo === v}" title="${t}">${r}</button>`).join('');
+    const ms = `<label class="joy-ms" title="Quanto tempo segurando para virar toque longo">após <input type="number" class="joy-num-in" data-campo="msLongo" min="100" max="5000" step="50" value="${s.msLongo}"> ms</label>`;
+    corpo = `
+      <div class="joy-seg" role="group" aria-label="Como o botão funciona">${seg}</div>
+      ${modo === 'curto' ? `<div class="joy-linha"><span class="joy-rot">Tecla</span>${joyPill(s.teclaCurto, 'data-tecla="teclaCurto"', it.acoes.curto)}</div>` : ''}
+      ${modo === 'ambos' ? `<div class="joy-linha"><span class="joy-rot">Toque rápido</span>${joyPill(s.teclaCurto, 'data-tecla="teclaCurto"', it.acoes.curto)}</div>` : ''}
+      ${modo !== 'curto' ? `<div class="joy-linha"><span class="joy-rot">Segurando</span>${joyPill(s.teclaLongo, 'data-tecla="teclaLongo"', it.acoes.longo)}${ms}</div>` : ''}`;
+  } else if (s.tipo === 'ultra') {
+    corpo = `<div class="joy-linha"><span class="joy-rot">Pinos</span>${joySelectPino(s.trig, s.uid, 'trig', false, [s.echo], 'TRIG')}${joySelectPino(s.echo, s.uid, 'echo', false, [s.trig], 'ECHO')}</div>` +
+      joyRenderFaixas(s, it);
+  } else if (s.tipo === 'pot') {
+    pinos = joySelectPino(s.pino, s.uid, 'pino', true);
+    corpo = joyRenderFaixas(s, it);
+  } else if (s.tipo === 'led') {
+    pinos = joySelectPino(s.pino, s.uid, 'pino', false);
+    const opcoes = ['', ...usadas];
+    if (s.tecla && !opcoes.includes(s.tecla)) opcoes.push(s.tecla);
+    corpo = `
+      <div class="joy-linha"><span class="joy-rot">Acende com</span>
+        <select class="joy-sel" data-campo="tecla" aria-label="Tecla que acende o LED">
+          ${opcoes.map((t) => `<option value="${escJ(t)}"${t === (s.tecla || '') ? ' selected' : ''}>${t ? escJ(JoystickGen.rotuloTecla(t)) : '— escolha —'}</option>`).join('')}
+        </select>
+      </div>`;
+  }
+  return `
+    <article class="joy-card tipo-${s.tipo}" data-uid="${s.uid}" data-nome="${escJ(it.nome)}">
+      <header>
+        <img src="${ICONES_JOY[s.tipo]}" alt="" title="${escJ(LIGACAO_JOY[s.tipo])}">
+        <b title="${escJ(LIGACAO_JOY[s.tipo])}">${escJ(it.nome)}</b>
+        <span class="joy-pinos">${pinos}</span>
+        <button type="button" class="joy-x" data-acao="tirar" title="Tirar ${escJ(it.nome)}" aria-label="Tirar ${escJ(it.nome)}">✕</button>
+      </header>
+      <div class="joy-card-corpo">${corpo}</div>
+      <div class="joy-card-msgs">${joyHtmlMsgs(it.nome)}</div>
+    </article>`;
 }
 
 function joyRenderLista() {
   const lista = $('#joy-lista');
-  const { itens } = JoystickGen.listarAcoes(JOY.config.sensores);
+  const { itens, acoes } = JoystickGen.listarAcoes(JOY.config.sensores);
   if (!itens.length) {
-    lista.innerHTML = `<div class="joy-inicio"><img src="assets/icone_modulo_botao.png" alt=""><h3>Monte o seu controle</h3><p>Escolha um sensor à esquerda. Cada sensor pode virar uma tecla do computador.</p></div>`;
+    lista.innerHTML = `<div class="joy-inicio"><img src="assets/icone_modulo_botao.png" alt=""><h3>Monte o seu controle</h3><p>Use os botões <b>＋</b> lá em cima. Cada sensor vira uma tecla do computador.</p></div>`;
     return;
   }
-  const usadas = [...new Set(JoystickGen.listarAcoes(JOY.config.sensores).acoes.map((a) => a.tecla))];
-  lista.innerHTML = itens.map((it) => {
-    const s = it.s;
-    let corpo = '';
-    if (s.tipo === 'botao') {
-      const c = s.curto !== false, l = !!s.longo;
-      corpo = `
-        <div class="joy-linha"><span class="joy-rot">Pino</span>${joySelectPino(s.pino, s.uid, 'pino', false)}</div>
-        <div class="joy-linha"><span class="joy-rot">Toque</span>
-          <span class="joy-alterna" role="group" aria-label="Tipo de toque">
-            <button type="button" data-acao="curto" aria-pressed="${c}">⚡ Curto</button>
-            <button type="button" data-acao="longo" aria-pressed="${l}">⏳ Longo</button>
-          </span>
-          ${l ? `<label class="joy-ms">depois de <input type="number" class="joy-num-in" data-campo="msLongo" min="100" max="5000" step="50" value="${s.msLongo}"> ms</label>` : ''}
-        </div>
-        ${c ? `<div class="joy-linha"><span class="joy-rot">Curto</span>${it.acoes.curto ? `<span class="joy-num" data-num="${it.acoes.curto}">A${it.acoes.curto}</span>` : ''}${joyPill(s.teclaCurto, 'data-tecla="teclaCurto"')}</div>` : ''}
-        ${l ? `<div class="joy-linha"><span class="joy-rot">Longo</span>${it.acoes.longo ? `<span class="joy-num" data-num="${it.acoes.longo}">A${it.acoes.longo}</span>` : ''}${joyPill(s.teclaLongo, 'data-tecla="teclaLongo"')}</div>` : ''}
-        <p class="joy-frase">${joyFrase(s)}</p>`;
-    } else if (s.tipo === 'ultra') {
-      corpo = `
-        <div class="joy-linha"><span class="joy-rot">TRIG</span>${joySelectPino(s.trig, s.uid, 'trig', false, [s.echo])}
-          <span class="joy-rot curto">ECHO</span>${joySelectPino(s.echo, s.uid, 'echo', false, [s.trig])}</div>
-        ${joyRenderFaixas(s)}`;
-    } else if (s.tipo === 'pot') {
-      corpo = `
-        <div class="joy-linha"><span class="joy-rot">Pino</span>${joySelectPino(s.pino, s.uid, 'pino', true)}</div>
-        ${joyRenderFaixas(s)}`;
-    } else if (s.tipo === 'led') {
-      const opcoes = ['', ...usadas];
-      if (s.tecla && !opcoes.includes(s.tecla)) opcoes.push(s.tecla);
-      corpo = `
-        <div class="joy-linha"><span class="joy-rot">Pino</span>${joySelectPino(s.pino, s.uid, 'pino', false)}</div>
-        <div class="joy-linha"><span class="joy-rot">Acende com</span>
-          <select class="joy-sel" data-campo="tecla" aria-label="Tecla que acende o LED">
-            ${opcoes.map((t) => `<option value="${escJ(t)}"${t === (s.tecla || '') ? ' selected' : ''}>${t ? escJ(JoystickGen.rotuloTecla(t)) : '— escolha —'}</option>`).join('')}
-          </select>
-        </div>
-        <p class="joy-frase">O LED acende sozinho, no próprio Arduino, enquanto algum sensor estiver mandando essa tecla.</p>`;
-    }
-    return `
-      <article class="joy-card tipo-${s.tipo}" data-uid="${s.uid}">
-        <header>
-          <img src="${ICONES_JOY[s.tipo]}" alt="">
-          <div class="joy-card-tit"><b>${escJ(it.nome)}</b><small>${escJ(LIGACAO_JOY[s.tipo])}</small></div>
-          <button type="button" class="joy-x" data-acao="tirar" title="Tirar ${escJ(it.nome)}" aria-label="Tirar ${escJ(it.nome)}">✕</button>
-        </header>
-        <div class="joy-card-corpo">${corpo}</div>
-      </article>`;
-  }).join('');
+  const usadas = [...new Set(acoes.map((a) => a.tecla))];
+  lista.innerHTML = itens.map((it) => joyRenderCartao(it, usadas)).join('');
 }
 
-function joyRenderLado() {
+function joyRenderAvisosDosCartoes() {
+  document.querySelectorAll('#joy-lista .joy-card').forEach((card) => {
+    const caixa = card.querySelector('.joy-card-msgs');
+    if (caixa) caixa.innerHTML = joyHtmlMsgs(card.dataset.nome);
+  });
+}
+
+/* Estado na barra: erro / aviso / pronto / conectado; mensagens gerais embaixo. */
+function joyRenderBarra() {
   const g = JOY.gerado;
-  // mensagens
-  const msgs = $('#joy-msgs');
-  msgs.innerHTML = [
-    ...g.erros.map((m) => `<li class="erro">✗ ${escJ(m)}</li>`),
-    ...g.avisos.map((m) => `<li class="aviso">! ${escJ(m)}</li>`),
-  ].join('') || '<li class="ok">✓ Tudo pronto. Clique em Upload para gravar no Arduino.</li>';
-  // teste ao vivo
-  const teclas = $('#joy-teclas');
-  teclas.innerHTML = g.acoes.length ? g.acoes.map((a) => `
-    <div class="joy-key${JOY.ativas.has(a.numero) ? ' ligada' : ''}" data-num="${a.numero}" title="${escJ(a.descricao)}">
-      <span class="k">${escJ(JoystickGen.rotuloTecla(a.tecla))}</span>
-      <small>A${a.numero} · ${escJ(a.sensor)}${a.modo === 'toque' ? ' · toque' : ''}</small>
-    </div>`).join('') : '<p class="joy-vazio">As teclas configuradas aparecem aqui.</p>';
-  joyRenderStatus();
-  // código
-  joyRenderCodigo();
-}
+  const nomes = JoystickGen.listarAcoes(JOY.config.sensores).itens.map((it) => it.nome);
+  const doCartao = (m) => nomes.some((n) => m.startsWith(n + ':') || m.startsWith(n + ','));
+  const gerais = [...g.erros.filter((m) => !doCartao(m)).map((m) => ['erro', m]),
+                  ...g.avisos.filter((m) => !doCartao(m)).map((m) => ['aviso', m])];
+  const av = $('#joy-avisos');
+  av.innerHTML = gerais.map(([t, m]) => `<p class="joy-msg ${t}">${t === 'erro' ? '✗' : '!'} ${escJ(m)}</p>`).join('');
+  av.hidden = !gerais.length;
 
-function joyRenderStatus() {
   const el = $('#joy-status');
-  if (JOY.conectado) { el.textContent = 'Joystick conectado — aperte os sensores!'; el.className = 'joy-status ligado'; }
-  else if (MON.aberto) { el.textContent = 'Monitor aberto. Esperando mensagens do joystick…'; el.className = 'joy-status'; }
-  else { el.textContent = 'Grave o código e abra o Monitor Serial (9600) para testar aqui.'; el.className = 'joy-status'; }
+  let txt, cls;
+  if (g.erros.length) { txt = g.erros.length === 1 ? '1 erro para corrigir' : `${g.erros.length} erros para corrigir`; cls = 'erro'; }
+  else if (JOY.conectado) { txt = 'Conectado — aperte os sensores'; cls = 'ligado'; }
+  else if (MON.aberto) { txt = 'Esperando o joystick…'; cls = ''; }
+  else if (g.avisos.length) { txt = g.avisos.length === 1 ? '1 aviso' : `${g.avisos.length} avisos`; cls = 'aviso'; }
+  else { txt = 'Pronto para o Upload'; cls = 'ok'; }
+  el.textContent = txt;
+  el.className = 'joy-estado ' + cls;
+  $('#bt-joy-monitor').classList.toggle('ligado', MON.aberto);
+  $('#bt-joy-monitor').lastChild.textContent = MON.aberto ? ' Testando' : ' Testar';
 }
 
 function joyRenderCodigo() {
@@ -307,13 +314,9 @@ function joyAoClicar(ev) {
     case 'tirar':
       JOY.config.sensores = JOY.config.sensores.filter((x) => x !== s);
       break;
-    case 'curto':
-      s.curto = s.curto === false;
-      if (s.curto === false && !s.longo) s.longo = true;
-      break;
-    case 'longo':
-      s.longo = !s.longo;
-      if (!s.longo && s.curto === false) s.curto = true;
+    case 'modo-botao':
+      s.curto = bt.dataset.modo !== 'longo';
+      s.longo = bt.dataset.modo !== 'curto';
       break;
     case 'tirar-faixa':
       s.faixas.splice(+faixaEl.dataset.faixa, 1);
@@ -351,26 +354,16 @@ function joyAoMudar(ev) {
     v = +v;
   }
   alvo[campo] = v;
-  // números: não redesenha a lista (perderia o foco do campo), só o resto
+  // números: não redesenha a lista (perderia o foco do campo), só os avisos
   joyMudou(el.type === 'number');
-  if (el.type === 'number') joyAtualizarFrases();
-}
-
-function joyAtualizarFrases() {
-  document.querySelectorAll('#joy-lista .joy-card.tipo-botao').forEach((card) => {
-    const s = JOY.config.sensores.find((x) => x.uid === card.dataset.uid);
-    const p = card.querySelector('.joy-frase');
-    if (s && p) p.innerHTML = joyFrase(s);
-  });
 }
 
 /* ------------------------------------------------------------
  * Escolher a tecla
  * ---------------------------------------------------------- */
 function joyAbrirDialogoTecla() {
-  const d = $('#joy-dialogo-tecla');
   $('#joy-tecla-mostra').innerHTML = '<span class="ph">aperte uma tecla…</span>';
-  d.showModal();
+  $('#joy-dialogo-tecla').showModal();
 }
 
 function joyDefinirTecla(tecla) {
@@ -388,13 +381,17 @@ function joyDefinirTecla(tecla) {
 }
 
 function joyTeclaNoDialogo(ev) {
-  if (['Shift', 'Control', 'Alt'].includes(ev.key) && !ev.repeat) {
+  const d = $('#joy-dialogo-tecla');
+  if (['Shift', 'Control', 'Alt'].includes(ev.key)) {
     // modificadores sozinhos também valem, mas esperam soltar para não pegar atalhos
     ev.preventDefault();
-    $('#joy-tecla-mostra').textContent = JoystickGen.rotuloTecla(JoystickGen.teclaDoEvento(ev));
-    $('#joy-dialogo-tecla').dataset.mod = JoystickGen.teclaDoEvento(ev);
+    if (!ev.repeat) {
+      d.dataset.mod = JoystickGen.teclaDoEvento(ev);
+      $('#joy-tecla-mostra').textContent = JoystickGen.rotuloTecla(d.dataset.mod);
+    }
     return;
   }
+  delete d.dataset.mod;
   const t = JoystickGen.teclaDoEvento(ev);
   ev.preventDefault();
   ev.stopPropagation();
@@ -408,23 +405,25 @@ function joyTeclaNoDialogo(ev) {
  * ---------------------------------------------------------- */
 function joyLinhaSerial(linha) {
   const l = String(linha || '').trim();
-  if (l === 'JOYSTICK PRONTO') { JOY.conectado = true; JOY.ativas.clear(); if (!$('#area-joystick').hidden) joyRenderLado(); return; }
+  if (l === 'JOYSTICK PRONTO') {
+    JOY.conectado = true;
+    JOY.ativas.clear();
+    document.querySelectorAll('#joy-lista .joy-tecla.ligada').forEach((e) => e.classList.remove('ligada'));
+    joyRenderBarra();
+    return;
+  }
   const m = /^A(\d+)_(DOWN|UP)$/.exec(l);
   if (!m) return;
-  JOY.conectado = true;
   const n = +m[1];
-  const el = document.querySelector(`#joy-teclas .joy-key[data-num="${n}"]`);
-  const chips = document.querySelectorAll(`#joy-lista .joy-num[data-num="${n}"]`);
+  const els = document.querySelectorAll(`#joy-lista .joy-tecla[data-num="${n}"]`);
   if (m[2] === 'DOWN') {
     JOY.ativas.add(n);
-    if (el) { el.classList.add('ligada'); el.classList.remove('pisca'); void el.offsetWidth; el.classList.add('pisca'); }
-    chips.forEach((c) => c.classList.add('ligada'));
+    els.forEach((e) => { e.classList.add('ligada'); e.classList.remove('pisca'); void e.offsetWidth; e.classList.add('pisca'); });
   } else {
     JOY.ativas.delete(n);
-    if (el) el.classList.remove('ligada');
-    chips.forEach((c) => c.classList.remove('ligada'));
+    els.forEach((e) => e.classList.remove('ligada'));
   }
-  if ($('#joy-status').className.indexOf('ligado') < 0) joyRenderStatus();
+  if (!JOY.conectado) { JOY.conectado = true; joyRenderBarra(); }
 }
 
 /* ------------------------------------------------------------
@@ -432,19 +431,23 @@ function joyLinhaSerial(linha) {
  * ---------------------------------------------------------- */
 function joystickCodigoAtual() { return JOY.gerado ? JOY.gerado.ino : ''; }
 function joystickPodeGravar() { return !!JOY.gerado && !JOY.gerado.erros.length; }
+
 function joystickAoAbrir() {
-  if (!JOY.gerado) joyMudou();
-  else { joyRenderLista(); joyRenderLado(); }
-  // em telas baixas, recolhe o painel de baixo na primeira vez (o "Testar no Monitor" abre de novo)
-  if (!JOY.jaAbriu && window.innerHeight < 900 && !MON.aberto) {
+  if (!JOY.gerado) JOY.gerado = JoystickGen.gerar(JOY.config);
+  joyRenderLista();
+  joyRenderBarra();
+  // a aba usa a largura toda: some o currículo e o painel de baixo recolhe
+  // (o "Testar" abre o Monitor de novo)
+  document.body.classList.add('joy-ativo');
+  if (!MON.aberto) {
     $('#console-wrap').classList.add('recolhido');
     $('#bt-recolher').textContent = '▴';
   }
-  JOY.jaAbriu = true;
   JOY.rotuloAntes = $('#rotulo-sketch').textContent;
   $('#rotulo-sketch').textContent = 'Joystick.ino';
 }
 function joystickAoSair() {
+  document.body.classList.remove('joy-ativo');
   if (JOY.rotuloAntes) $('#rotulo-sketch').textContent = JOY.rotuloAntes;
   JOY.rotuloAntes = null;
 }
@@ -459,19 +462,16 @@ function joyBaixarPacote() {
     { nome: 'Joystick/LEIA-ME.txt', texto: g.leiame },
   ]);
   baixarArquivo('Joystick.zip', z, 'application/zip');
-  log('Joystick.zip baixado: descompacte e dê dois cliques em "Iniciar joystick.bat".', 'ok');
+  log('Joystick.zip baixado: descompacte e dê dois cliques em "Iniciar joystick.bat" (feche o Monitor Serial antes).', 'ok');
 }
 
 function joyIniciar() {
   if (!document.getElementById('area-joystick') || typeof JoystickGen === 'undefined') return;
   joyCarregar();
 
-  // paleta
   $('#joy-paleta').innerHTML = Object.keys(ICONES_JOY).map((t) => `
-    <button type="button" class="joy-add" data-tipo="${t}">
-      <img src="${ICONES_JOY[t]}" alt="">
-      <span><b>${JoystickGen.TIPOS[t].nome}</b><small>${DESC_JOY[t]}</small></span>
-      <span class="mais" aria-hidden="true">＋</span>
+    <button type="button" class="joy-add" data-tipo="${t}" title="Adicionar ${JoystickGen.TIPOS[t].nome.toLowerCase()}">
+      <img src="${ICONES_JOY[t]}" alt=""><span>${JoystickGen.TIPOS[t].nome}</span><b aria-hidden="true">＋</b>
     </button>`).join('');
   $('#joy-paleta').addEventListener('click', (ev) => {
     const b = ev.target.closest('.joy-add');
@@ -482,6 +482,24 @@ function joyIniciar() {
   lista.addEventListener('click', joyAoClicar);
   lista.addEventListener('change', joyAoMudar);
 
+  // barra
+  $('#bt-joy-monitor').addEventListener('click', () => {
+    if (MON.aberto) { mostrarPainelInf('monitor'); return; }
+    mostrarPainelInf('monitor');
+    $('#mon-baud').value = '9600';
+    ligarMonitor();
+  });
+  $('#bt-joy-codigo').addEventListener('click', () => { joyRenderCodigo(); $('#joy-dialogo-codigo').showModal(); });
+  $('#bt-joy-zip').addEventListener('click', joyBaixarPacote);
+  $('#bt-joy-padrao').addEventListener('click', () => {
+    if (!confirm('Voltar para o joystick de 4 botões (setas)? A montagem atual será apagada.')) return;
+    JOY.config = JoystickGen.configPadrao();
+    JOY.config.sensores.forEach((s) => { s.uid = novoUid(); });
+    joyMudou();
+  });
+
+  // diálogo do código
+  const dc = $('#joy-dialogo-codigo');
   $('#joy-visoes').addEventListener('click', (ev) => {
     const b = ev.target.closest('button[data-visao]');
     if (!b) return;
@@ -494,22 +512,13 @@ function joyIniciar() {
       .then(() => joyAviso('Código copiado.'), () => joyAviso('Não deu para copiar — selecione o texto e use Ctrl+C.'));
   });
   $('#bt-joy-editor').addEventListener('click', () => {
+    dc.close();
     $('#editor-livre').value = JOY.gerado.ino;
     trocarAba('livre');
     log('O código do joystick foi para o Editor C++. Lá você pode mudar o que quiser.', 'info');
   });
-  $('#bt-joy-zip').addEventListener('click', joyBaixarPacote);
-  $('#bt-joy-padrao').addEventListener('click', () => {
-    if (!confirm('Voltar para o joystick de 4 botões (setas)? A montagem atual será apagada.')) return;
-    JOY.config = JoystickGen.configPadrao();
-    JOY.config.sensores.forEach((s) => { s.uid = novoUid(); });
-    joyMudou();
-  });
-  $('#bt-joy-monitor').addEventListener('click', () => {
-    mostrarPainelInf('monitor');
-    $('#mon-baud').value = '9600';
-    if (!MON.aberto) ligarMonitor();
-  });
+  $('#bt-joy-codigo-fechar').addEventListener('click', () => dc.close());
+  dc.addEventListener('click', (ev) => { if (ev.target === dc) dc.close(); });   // clique fora fecha
 
   // diálogo da tecla
   const d = $('#joy-dialogo-tecla');
@@ -529,7 +538,14 @@ function joyIniciar() {
     const original = alimentarTracador;
     window.alimentarTracador = function (linha) { joyLinhaSerial(linha); return original.apply(this, arguments); };
   }
-  setInterval(() => { if (!$('#area-joystick').hidden && !JOY.conectado) joyRenderStatus(); }, 1500);
+  // o Monitor abre/fecha fora daqui: mantém o estado da barra em dia
+  let monAntes = null;
+  setInterval(() => {
+    if ($('#area-joystick').hidden || MON.aberto === monAntes) return;
+    monAntes = MON.aberto;
+    if (!MON.aberto) { JOY.conectado = false; JOY.ativas.clear(); }
+    joyRenderBarra();
+  }, 700);
 
   JOY.gerado = JoystickGen.gerar(JOY.config);
 }
