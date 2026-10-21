@@ -24,8 +24,12 @@ funcionam por **faixas** (cm ou 0–1023), cada uma "segurar" ou "toque". A IDE 
 
 - **Upload** grava o `Joystick.ino` no Arduino (no site ou no laboratório);
 - **Testar no Monitor** acende as teclas na tela, sem precisar do jogo;
-- **Baixar pacote (.zip)** traz o `gamepad.py` e o `Iniciar joystick.bat`, que rodam no Windows
-  e apertam as teclas de verdade (precisa do Python; o `.bat` instala `pyserial` e `pydirectinput`).
+- **Buzzer** com sons de jogo (bip, tiro, pulo, moeda, nitro, explosão e motor de carro que acelera
+  enquanto a tecla está apertada), tocados pelo próprio Arduino;
+- **🖥 Enviar para o app**: o app **MIDE Joystick** (`app-joystick/`, Python + Tkinter, instala uma
+  vez) fica aberto no PC, recebe a montagem direto da IDE, aperta as teclas de verdade e mostra
+  tudo acendendo. No Upload, a IDE pede para ele soltar a porta USB e depois retomar.
+- Sem o app, ainda dá para baixar o pacote avulso (`gamepad.py` + `.bat`).
 
 Detalhes: `LEIA-ME.md` §15.
 

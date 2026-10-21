@@ -15,6 +15,7 @@ const cfg = { sensores: [
   { tipo: 'ultra', trig: 6, echo: 7, faixas: [{ min: 0, max: 15, tecla: 'w', modo: 'segurar' }, { min: 16, max: 40, tecla: 'enter', modo: 'toque' }] },
   { tipo: 'pot', pino: 'A0', faixas: [{ min: 0, max: 341, tecla: 'a', modo: 'segurar' }, { min: 683, max: 1023, tecla: 'd', modo: 'segurar' }] },
   { tipo: 'led', pino: 13, tecla: 'left' },
+  { tipo: 'buzzer', pino: 9, sons: [{ tecla: 'space', quando: 'apertar', som: 'tiro' }, { tecla: 'left', quando: 'segurar', som: 'motor' }, { tecla: 'left', quando: 'soltar', som: 'nitro' }] },
 ] };
 const g = J.gerar(cfg);
 const r = C.compilar(g.ino);
@@ -51,6 +52,8 @@ pD.addListener(() => {
   trig = !!v;
 });
 const ledLog = [];
+const bordas = [];   // subidas do pino 9 (buzzer)
+let buzAntes = 0;
 let ledAntes = 0;
 const FIM = 4.2 * 16e6;
 let prox = 0;
@@ -64,6 +67,9 @@ while (cpu.cycles < FIM) {
     setar(3, !(s > 1.0 && s < 1.3));
     // pot: 0 V até 3.4 s, depois 5 V (e ruído pequeno)
     adc.channelValues[0] = s < 3.4 ? 0.01 * (Math.random()) : 4.98 + 0.01 * Math.random();
+    const bz = ler(9);
+    if (bz && !buzAntes) bordas.push(s);
+    buzAntes = bz;
     const led = ler(13);
     if (led !== ledAntes) { ledLog.push([+s.toFixed(3), led]); ledAntes = led; }
     prox += 16 * 100;
@@ -71,7 +77,8 @@ while (cpu.cycles < FIM) {
 }
 console.log('Serial:'); linhas.forEach(([tt, l]) => console.log('  ', tt.toFixed(3), l));
 console.log('LED 13:', JSON.stringify(ledLog));
-const ev = linhas.map((x) => x[1]);
+const ev = linhas.map((x) => x[1].replace(/^JOYSTICK PRONTO [0-9a-f]{8}$/, 'JOYSTICK PRONTO'));
+console.log('id:', g.id, linhas[0][1].endsWith(g.id) ? '(confere)' : '(DIFERENTE)');
 // ações: A1 botão1 curto, A2 botão1 longo, A3 botão2, A4/A5 ultrassônico, A6/A7 potenciômetro
 const confere = (seq) => { let i = 0; for (const e of ev) if (e === seq[i]) i++; return i === seq.length; };
 const ok = confere(['JOYSTICK PRONTO', 'A6_DOWN', 'A1_DOWN', 'A1_UP', 'A3_DOWN', 'A3_UP', 'A2_DOWN', 'A2_UP',
@@ -79,5 +86,11 @@ const ok = confere(['JOYSTICK PRONTO', 'A6_DOWN', 'A1_DOWN', 'A1_UP', 'A3_DOWN',
   && ev.length === 14
   && JSON.stringify(ledLog.map((x) => x[1])) === '[1,0]'
   && ledLog[0][0] > 1.0 && ledLog[0][0] < 1.1 && ledLog[1][0] > 1.3 && ledLog[1][0] < 1.5;
-console.log(ok ? 'SIMULAÇÃO OK' : 'SIMULAÇÃO COM DIFERENÇAS');
-process.exit(ok ? 0 : 1);
+// frequência média do buzzer em cada trecho
+const hz = (a, b) => Math.round(bordas.filter((x) => x >= a && x < b).length / (b - a));
+const tiro = hz(0.525, 0.6), parado = hz(0.7, 0.95), motor = hz(1.1, 1.28), nitro = hz(1.45, 1.75), depois = hz(2.2, 2.5);
+console.log('buzzer Hz — tiro:', tiro, 'parado:', parado, 'motor:', motor, 'nitro:', nitro, 'depois:', depois);
+const okBuz = tiro > 600 && tiro < 2100 && parado === 0 && motor > 45 && motor < 110 && nitro > 1000 && nitro < 3200 && depois === 0;
+console.log(okBuz ? 'BUZZER OK' : 'BUZZER COM DIFERENÇAS');
+console.log(ok && okBuz ? 'SIMULAÇÃO OK' : 'SIMULAÇÃO COM DIFERENÇAS');
+process.exit(ok && okBuz ? 0 : 1);

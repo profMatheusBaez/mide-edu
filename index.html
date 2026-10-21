@@ -10,7 +10,7 @@
 <link rel="stylesheet" href="css/blocos.css?v=web1">
 <link rel="stylesheet" href="css/lego.css?v=web1">
 <link rel="stylesheet" href="css/microbit.css?v=web1">
-<link rel="stylesheet" href="css/joystick.css?v=joy6">
+<link rel="stylesheet" href="css/joystick.css?v=joy7">
 <link rel="icon" href="assets/academy/logo.svg" type="image/svg+xml">
 </head>
 <body>
@@ -174,7 +174,8 @@
               <span id="joy-status" class="joy-estado" role="status" aria-live="polite"></span>
               <button type="button" class="joy-bt" id="bt-joy-monitor" title="Abre o Monitor Serial: as teclas acendem quando você aperta os sensores"><span aria-hidden="true">▶</span> Testar</button>
               <button type="button" class="joy-bt" id="bt-joy-codigo" title="Ver o código gerado (Arduino, Python e .bat)">{ } Código</button>
-              <button type="button" class="joy-bt primario" id="bt-joy-zip" title="gamepad.py + Iniciar joystick.bat: rodam no PC e apertam as teclas">⬇ Pacote para o PC</button>
+              <span id="joy-app" class="joy-estado" hidden></span>
+              <button type="button" class="joy-bt primario" id="bt-joy-app" title="Manda a montagem para o app MIDE Joystick aberto neste computador">🖥 Enviar para o app</button>
               <button type="button" class="joy-bt icone" id="bt-joy-padrao" title="Voltar para o controle de 4 botões (setas)" aria-label="Voltar para o padrão">↺</button>
             </div>
             <div id="joy-avisos" class="joy-avisos" hidden></div>
@@ -396,6 +397,21 @@
   </div>
 </dialog>
 
+<dialog id="joy-dialogo-app" class="joy-dialogo joy-dialogo-app" aria-labelledby="joy-app-tit">
+  <h3 id="joy-app-tit">🖥 App MIDE Joystick</h3>
+  <p id="joy-app-msg">Não encontrei o app aberto neste computador.</p>
+  <ol class="joy-passos-app">
+    <li><b>Só na primeira vez:</b> baixe o app, descompacte numa pasta fixa e dê dois cliques em <em>Abrir MIDE Joystick.bat</em>.</li>
+    <li>Com o app aberto, clique em <em>Tentar de novo</em>. Se o navegador perguntar sobre acessar este computador / a rede local, clique em <b>Permitir</b>.</li>
+    <li>Depois disso a montagem vai sozinha para o app a cada mudança, e o Upload funciona sem fechar nada.</li>
+  </ol>
+  <div class="joy-dlg-pe joy-dlg-botoes">
+    <button type="button" class="joy-bt primario" id="bt-joy-app-baixar">⬇ Baixar o app (1ª vez)</button>
+    <button type="button" class="joy-bt" id="bt-joy-app-tentar">↻ Tentar de novo</button>
+    <button type="button" class="joy-bt" id="bt-joy-app-fechar">Fechar</button>
+  </div>
+  <p class="joy-sem-app">Sem o app? <button type="button" class="joy-link" id="bt-joy-zip">baixe o pacote avulso</button> (gamepad.py + .bat, um por montagem).</p>
+</dialog>
 <dialog id="joy-dialogo-codigo" class="joy-dialogo joy-dialogo-codigo" aria-label="Código gerado">
   <div class="joy-dlg-cab">
     <span class="joy-visoes" id="joy-visoes">
@@ -426,7 +442,7 @@
 </dialog>
 <script src="js/dados.js?v=web1"></script>
 <script src="js/k10.js?v=web1"></script>
-<script src="js/ide.js?v=joy1"></script>
+<script src="js/ide.js?v=joy7"></script>
 <script src="js/monitor.js?v=web1"></script>
 <script src="js/barra.js?v=web1"></script>
 
@@ -473,8 +489,9 @@
 <script src="js/menus.js?v=web1"></script>
 <script src="js/academy.js?v=web1"></script>
 <script src="js/boards.js?v=joy1"></script>
-<script src="js/joystick_gen.js?v=joy2"></script>
-<script src="js/joystick.js?v=joy6"></script>
+<script src="js/joystick_gen.js?v=joy7"></script>
+<script src="js/joystick_app.js?v=joy7"></script>
+<script src="js/joystick.js?v=joy7"></script>
 <!-- MIDE EDU web: compilador, gravação pela Web Serial e o "servidor" no navegador -->
 <script src="js/mide_compilador.js?v=web1"></script>
 <script src="js/mide_serial.js?v=web1"></script>

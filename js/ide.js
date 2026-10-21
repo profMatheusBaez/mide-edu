@@ -798,15 +798,20 @@ async function gravar() {
   if (!codigo.trim()) { log('Não há código para gravar.', 'aviso'); return; }
   ocupar(true);
   barraIniciar('gravar');
+  // Joystick: o app do PC (se estiver aberto) solta a porta USB durante a gravação
+  const comJoystick = estado.aba === 'joystick' && typeof joystickAntesDeGravar === 'function';
+  if (comJoystick) await joystickAntesDeGravar();
   log(`Gravando em ${porta}…`, 'info');
+  let gravou = false;
   try {
     const r = await api('/api/gravar', { codigo, porta, nome: estado.aba === 'joystick' ? 'Joystick' : (estado.fase ? estado.fase.id : 'sketch'), fqbn: estado.fqbn, placa: estado.placaCurso });
     logBloco(r.log, r.ok ? 'fraco' : 'erro');
+    gravou = !!r.ok;
     if (r.ok) {
       log('✓ Upload concluído. Olhe para a sua placa!', 'ok');
       barraFinalizar(true, 'Gravado! Olhe para a sua placa.');
       if (estado.aba === 'joystick') {
-        log('Joystick gravado. Teste em "Testar no Monitor"; para jogar, feche o Monitor e rode o "Iniciar joystick.bat" do pacote.', 'info');
+        log('Joystick gravado. Com o app MIDE Joystick aberto no PC, é só ir para o jogo.', 'info');
       }
       // XP e medalha são do Modo Treinamento. No Editor C++ o aluno está
       // escrevendo o código dele — gravar ali não fecha missão nenhuma.
@@ -829,6 +834,7 @@ async function gravar() {
     log('Falha ao falar com o servidor local: ' + e.message, 'erro');
     barraFinalizar(false, 'O servidor local não respondeu.');
   }
+  if (comJoystick && typeof joystickDepoisDeGravar === 'function') joystickDepoisDeGravar(gravou);
   ocupar(false);
 }
 

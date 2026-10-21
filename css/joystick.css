@@ -122,6 +122,9 @@ body.joy-ativo #lateral { display: none !important; }
 .joy-faixa .joy-tecla { margin-left: 6px; min-width: 56px; }
 .joy-modo { margin-left: auto; }
 .joy-faixas-pe { display: flex; gap: 6px; }
+.joy-som { display: flex; align-items: center; gap: 5px; }
+.joy-som .joy-sel { min-width: 0; flex: 1 1 0; }
+.joy-ouvir { color: var(--teal); }
 .joy-mais {
   border: 1px dashed var(--borda2); background: transparent; color: var(--txt2);
   border-radius: 6px; padding: 2px 9px; font-size: 11.5px;
@@ -195,3 +198,12 @@ body.joy-ativo #lateral { display: none !important; }
   .joy-add { padding: 4px; }
   #joy-lista { grid-template-columns: 1fr; }
 }
+
+/* ---------- app do PC ---------- */
+.joy-dialogo-app { text-align: left; max-width: 520px; }
+.joy-passos-app { margin: 0 0 6px; padding-left: 20px; font-size: 13px; color: var(--txt2); line-height: 1.5; }
+.joy-passos-app li { margin-bottom: 6px; }
+.joy-passos-app em { font-style: normal; font-weight: 700; color: var(--txt); }
+.joy-dlg-botoes { display: flex; gap: 8px; flex-wrap: wrap; }
+.joy-sem-app { margin: 14px 0 0 !important; font-size: 12px !important; }
+.joy-link { border: 0; background: none; padding: 0; color: var(--teal); text-decoration: underline; font-size: inherit; }

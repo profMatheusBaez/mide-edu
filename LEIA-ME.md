@@ -590,6 +590,32 @@ salva no navegador (`localStorage`, chave `mide_joystick_v1`).
 
 Cada faixa pode ser **segurar** (tecla apertada enquanto durar) ou **toque** (uma vez ao entrar).
 
+**Buzzer** (passivo, + no pino, − no GND; só um, porque o Uno toca um som de cada vez): cada linha é
+*tecla · apertou / soltou / segurando · som*. Sons de toque único: bip, tiro, pulo, moeda, nitro e
+explosão; *segurando* toca o **motor** (ronco de 55 a 180 Hz que acelera nos primeiros 2,5 s).
+"Qualquer" vale para todas as teclas (e perde para uma linha de tecla específica). O som é gerado
+no `loop()` sem `delay` (`atualizarBuzzer()`), então os sensores continuam respondendo. O ▶ toca uma
+prévia no PC com as mesmas contas.
+
+**App MIDE Joystick** (`app-joystick/`, recomendado): `MIDE Joystick.pyw` (Python + Tkinter, só
+biblioteca padrão + pyserial/pydirectinput, que ele instala sozinho) e `Abrir MIDE Joystick.bat`
+(acha `pyw`, o `pythonw` do Thonny ou `pythonw`). Baixa-se uma vez pelo diálogo do botão **🖥 Enviar
+para o app**; a IDE embute os arquivos em `js/joystick_app.js` (gerado por
+`ferramentas/joystick/embutir_app.js` — rode depois de mexer no app).
+- Escuta só em `127.0.0.1:8765` e só aceita as origens do site da MIDE, `null` (index.html do disco)
+  e `http://127.0.0.1` / `localhost` (servidor do laboratório). Rotas: `GET /status`,
+  `POST /montagem` (as ações, o `id` do código e a porta), `POST /soltar {segundos}`, `POST /retomar`.
+  Responde `Access-Control-Allow-Private-Network`; o Chrome/Edge pode pedir permissão de acesso à
+  rede local/a este computador na primeira vez.
+- A IDE manda a montagem no clique e, depois do 1º contato, **a cada mudança** (verifica o app a cada
+  3 s com a aba aberta). O chip mostra *App: pronto / sem Arduino / faça o Upload / fechado*.
+- O `.ino` manda `JOYSTICK PRONTO <id>` (FNV do código); o app avisa se a placa estiver com outra
+  montagem.
+- **Upload** (`ide.js`, `joystickAntesDeGravar`/`DepoisDeGravar`): o app solta a porta, a IDE grava,
+  manda a montagem e o app retoma. **Testar** faz o mesmo enquanto o Monitor estiver aberto.
+- Uma instância só (a 2ª avisa que já está aberto); a montagem fica em `montagem.json`; erros em
+  `erro.txt`.
+
 **Protocolo (Serial 9600):** cada ação tem um número; o Arduino manda `A3_DOWN` quando a ação 3
 começa e `A3_UP` quando termina. O `gamepad.py` tem a tabela `ACOES = {"A3": ("w", "segurar")}`
 e usa o `pydirectinput` (teclas e cliques). Ele acha o Arduino sozinho (ou use `PORTA = "COM5"`)
@@ -609,7 +635,11 @@ MIDE VM do site.
   determinística, `.zip` válido;
 - `node simular_joystick.js` (precisa de `npm install avr8js@0.20.1`) — roda o `.ino` no
   **firmware real da MIDE VM** no simulador: toque curto, toque longo, ultrassônico em duas
-  faixas, potenciômetro com ruído e o LED, conferindo a sequência exata de mensagens.
+  faixas, potenciômetro com ruído, o LED e o buzzer (frequência medida no pino: tiro, motor
+  enquanto segura, nitro ao soltar e silêncio), conferindo a sequência exata de mensagens;
+- `python3 testar_app.py` — o app com Xvfb e uma porta serial falsa (pty): CORS/origens, montagem,
+  conexão, id da placa, soltar/retomar a porta, montagem salva e instância única;
+- `node embutir_app.js --verificar` — `js/joystick_app.js` igual aos arquivos de `app-joystick/`.
 
 **Se não funcionar** (a janela do `gamepad.py` explica cada caso):
 - *O `.bat` abre e fecha:* era um `)` dentro de um `echo` no `.bat` da 1ª versão (fechava o bloco
@@ -624,6 +654,6 @@ MIDE VM do site.
 - *A janela mostra "código ANTIGO" (`BTN_1_DOWN`):* a placa está com o `.ino` da versão de teste;
   grave de novo pela aba Joystick.
 
-**Ainda não testado:** no Uno real e com o `gamepad.py` num jogo no Windows (o `.bat` não pôde ser
-executado na nuvem — só revisado).
+**Ainda não testado:** no Uno real, o app e os `.bat` no Windows (só revisados; o app foi testado no
+Linux) e o pedido de permissão de rede local do Chrome/Edge ao falar com o app a partir do site.
 

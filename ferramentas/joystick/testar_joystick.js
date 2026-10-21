@@ -18,7 +18,9 @@ const casos = {
     { tipo: 'led', pino: 12, tecla: 'space' },
     { tipo: 'led', pino: 13, tecla: 'w' },
     { tipo: 'led', pino: 11, tecla: 'z' },
+    { tipo: 'buzzer', pino: 8, sons: [{ tecla: '*', quando: 'apertar', som: 'bip' }, { tecla: 'space', quando: 'apertar', som: 'tiro' }, { tecla: 'w', quando: 'segurar', som: 'motor' }, { tecla: 'w', quando: 'soltar', som: 'nitro' }, { tecla: 'a', quando: 'apertar', som: 'pulo' }, { tecla: 'd', quando: 'apertar', som: 'moeda' }, { tecla: 'e', quando: 'apertar', som: 'explosao' }] },
   ] },
+  dois_buzzers: { sensores: [{ tipo: 'buzzer', pino: 8, sons: [] }, { tipo: 'buzzer', pino: 9, sons: [] }] },
   so_led: { sensores: [{ tipo: 'led', pino: 13, tecla: '' }] },
   maximo: { sensores: [
     ...[2, 3, 4, 5, 6, 7, 8, 9].map((p, i) => ({ tipo: 'botao', pino: p, curto: true, longo: true, teclaCurto: 'abcdefgh'[i], teclaLongo: 'ijklmnop'[i], msLongo: 500 })),
@@ -44,6 +46,7 @@ typedef bool boolean; typedef uint8_t byte;
 void pinMode(int,int); void digitalWrite(int,int); int digitalRead(int); int analogRead(int);
 unsigned long millis(); void delay(unsigned long); void delayMicroseconds(unsigned int);
 unsigned long pulseIn(int,int,unsigned long);
+void tone(int,unsigned int); void noTone(int); long random(long,long);
 template<class T> T abs(T x){return x<0?-x:x;}
 struct S_{ void begin(long); void print(const char*); void print(int); void println(const char*); } Serial;
 `;
@@ -66,7 +69,7 @@ for (const [nome, cfg] of Object.entries(casos)) {
   try { cp.execSync(`python3 -m py_compile "${path.join(saida, nome + '.py')}"`, { stdio: 'pipe' }); }
   catch (e) { ok3 = false; msg += ' py: ' + e.stderr; }
   const det = J.gerar(cfg).ino === g.ino;
-  const ok = ok1 && ok2 && ok3 && det;
+  const ok = ok1 && ok2 && ok3 && det && (nome !== 'dois_buzzers' || g.erros.some((e) => /um buzzer/.test(e)));
   if (!ok) falhas++;
   console.log(`${ok ? 'OK ' : 'ERRO'} ${nome.padEnd(9)} ações=${g.acoes.length} bytecode=${r.ok ? r.info.tamanho + 'B globais=' + r.info.globais : '-'} erros=${g.erros.length} avisos=${g.avisos.length}${msg}`);
 }

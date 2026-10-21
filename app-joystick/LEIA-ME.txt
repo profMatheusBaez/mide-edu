@@ -1,0 +1,23 @@
+MIDE JOYSTICK — app do PC
+=========================
+
+Instala uma vez. Depois a montagem vai da MIDE EDU direto para o app, sem baixar nem
+descompactar nada.
+
+1. Descompacte esta pasta em um lugar fixo (por exemplo, Documentos\MIDE Joystick).
+2. Dê dois cliques em "Abrir MIDE Joystick.bat" (ou no "MIDE Joystick.pyw").
+   Na primeira vez o app instala o pyserial e o pydirectinput (precisa de internet).
+3. Na MIDE EDU, aba Joystick, clique em "Enviar para o app". Se o navegador perguntar
+   se o site pode acessar dispositivos da rede local / deste computador, clique em Permitir.
+4. Faça o Upload normalmente: a IDE pede para o app soltar a porta USB e ele volta sozinho.
+5. Deixe o app aberto e vá para o jogo. As teclas acendem na janela do app.
+
+Precisa do Python 3 (python.org, marcando "Add Python to PATH") ou do Thonny.
+O app só aceita a montagem do site da MIDE EDU, do index.html aberto do disco e do
+servidor do laboratório (127.0.0.1). A montagem fica salva em montagem.json.
+
+Se não funcionar:
+- "porta ocupada": feche o Monitor Serial, o Arduino IDE e o Thonny no modo MicroPython.
+- "a placa está com outro código": faça o Upload pela aba Joystick.
+- O jogo não mexe: clique na janela do jogo para ela ficar em foco.
+- O app parou: veja o erro.txt nesta pasta.

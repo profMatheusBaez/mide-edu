@@ -21,19 +21,25 @@ const JOY = {
   ativas: new Set(),       // números das ações ligadas agora (teste ao vivo)
   conectado: false,
   alvoTecla: null,         // {uid, campo, faixa}
+  // app MIDE Joystick do PC (app-joystick/), em http://127.0.0.1:8765
+  app: { estado: 'nunca', status: null, idEnviado: '', timer: null, soltouParaMonitor: false },
 };
+const JOY_APP_URL = 'http://127.0.0.1:8765';
+const JOY_APP_CHAVE = 'mide_joystick_app_v1';   // '1' = já falou com o app alguma vez neste PC
 
 const ICONES_JOY = {
   botao: 'assets/icone_modulo_botao.png',
   ultra: 'assets/icone_modulo_us.png',
   pot: 'assets/icone_modulo_pot.png',
   led: 'assets/icone_modulo_led.png',
+  buzzer: 'assets/icone_modulo_buzzer.png',
 };
 const LIGACAO_JOY = {
   botao: 'Ligação: uma perna do botão no pino, a outra no GND.',
   ultra: 'Ligação: VCC no 5V, GND no GND, TRIG e ECHO nos pinos escolhidos.',
   pot: 'Ligação: pernas das pontas no 5V e no GND, a do meio no pino analógico.',
   led: 'Ligação: pino → resistor de 220 Ω → perna longa do LED; perna curta no GND.',
+  buzzer: 'Ligação: buzzer passivo — perna + no pino, perna − no GND.',
 };
 
 const escJ = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -84,6 +90,12 @@ function joyAdicionar(tipo) {
     if (pino === undefined) return joyAviso('Não sobrou pino digital livre (2 a 13).');
     const usada = JoystickGen.listarAcoes(JOY.config.sensores).acoes[0];
     s = { tipo, pino, tecla: usada ? usada.tecla : '' };
+  } else if (tipo === 'buzzer') {
+    if (JOY.config.sensores.some((x) => x.tipo === 'buzzer')) return joyAviso('O Arduino Uno toca um som de cada vez: use só um buzzer (ele pode ter vários sons).');
+    const livres = joyPinosUsados();
+    const pino = livres.has('8') ? joyPinoLivre(false) : 8;
+    if (pino === undefined) return joyAviso('Não sobrou pino digital livre (2 a 13).');
+    s = { tipo, pino, sons: [{ tecla: '*', quando: 'apertar', som: 'bip' }] };
   } else if (tipo === 'ultra') {
     const trig = joyPinoLivre(false);
     const echo = trig === undefined ? undefined : joyPinoLivre(false, [trig]);
@@ -124,8 +136,13 @@ function joyMudou(semRelista) {
   if (!semRelista) joyRenderLista();
   else joyRenderAvisosDosCartoes();
   joyRenderBarra();
-  if (!$('#joy-dialogo-codigo').open) { /* nada */ } else joyRenderCodigo();
+  if ($('#joy-dialogo-codigo').open) joyRenderCodigo();
   if (typeof atualizarBotoes === 'function') atualizarBotoes();
+  // app aberto: cada mudança vai sozinha para ele
+  if (JOY.app.estado === 'ligado') {
+    clearTimeout(JOY.app.timer);
+    JOY.app.timer = setTimeout(() => joyAppEnviar(false), 600);
+  }
 }
 
 /* Botão de tecla. data-num liga a tecla ao teste ao vivo (acende quando a ação começa). */
@@ -187,6 +204,58 @@ function joyRenderFaixas(s, it) {
     </div>`;
 }
 
+function joyRenderSons(s, usadas) {
+  const G = JoystickGen;
+  const linhas = (s.sons || []).map((r, i) => {
+    const teclas = ['*', ...usadas];
+    if (r.tecla && !teclas.includes(r.tecla)) teclas.push(r.tecla);
+    const sons = r.quando === 'segurar' ? { motor: G.MOTOR } : G.SONS;
+    return `
+    <div class="joy-som" data-som="${i}">
+      <select class="joy-sel" data-campo="tecla" aria-label="Tecla">
+        ${teclas.map((t) => `<option value="${escJ(t)}"${t === r.tecla ? ' selected' : ''}>${t === '*' ? 'qualquer' : escJ(G.rotuloTecla(t))}</option>`).join('')}
+      </select>
+      <select class="joy-sel" data-campo="quando" aria-label="Quando tocar">
+        ${Object.entries(G.QUANDO).map(([k, v]) => `<option value="${k}"${k === r.quando ? ' selected' : ''}>${v}</option>`).join('')}
+      </select>
+      <select class="joy-sel" data-campo="som" aria-label="Som">
+        ${Object.entries(sons).map(([k, v]) => `<option value="${k}"${k === r.som ? ' selected' : ''}>${escJ(v.nome)}</option>`).join('')}
+      </select>
+      <button type="button" class="joy-x joy-ouvir" data-acao="ouvir" title="Ouvir no computador" aria-label="Ouvir">▶</button>
+      <button type="button" class="joy-x" data-acao="tirar-som" title="Tirar este som" aria-label="Tirar este som">✕</button>
+    </div>`;
+  }).join('');
+  return `
+    <div class="joy-faixas-cab">Tecla · quando · som (motor: carro acelerando enquanto segura)</div>
+    ${linhas || '<p class="joy-vazio">Nenhum som.</p>'}
+    <div class="joy-faixas-pe"><button type="button" class="joy-mais" data-acao="mais-som">＋ som</button></div>`;
+}
+
+/* Prévia do som no próprio computador (mesmas contas do Arduino, onda quadrada). */
+let joyAudio = null;
+function joyOuvir(r) {
+  try {
+    joyAudio = joyAudio || new (window.AudioContext || window.webkitAudioContext)();
+    const ctx = joyAudio, osc = ctx.createOscillator(), vol = ctx.createGain();
+    osc.type = 'square';
+    vol.gain.value = 0.06;
+    osc.connect(vol).connect(ctx.destination);
+    const t0 = ctx.currentTime + 0.02;
+    let dur;
+    if (r.quando === 'segurar') {
+      dur = 3000;   // 3 s do motor acelerando
+      for (let t = 0; t < dur; t += 10) osc.frequency.setValueAtTime(JoystickGen.MOTOR.freq(t, t), t0 + t / 1000);
+    } else {
+      const som = JoystickGen.SONS[r.som];
+      if (!som) return;
+      dur = som.dur;
+      for (let t = 0; t < dur; t += 10) osc.frequency.setValueAtTime(Math.max(31, som.freq(t)), t0 + t / 1000);
+    }
+    osc.start(t0);
+    osc.stop(t0 + dur / 1000);
+  } catch (e) { joyAviso('Este navegador não tocou o som.'); }
+}
+
 function joyModoBotao(s) {
   const c = s.curto !== false, l = !!s.longo;
   return c && l ? 'ambos' : (l ? 'longo' : 'curto');
@@ -214,6 +283,9 @@ function joyRenderCartao(it, usadas) {
   } else if (s.tipo === 'pot') {
     pinos = joySelectPino(s.pino, s.uid, 'pino', true);
     corpo = joyRenderFaixas(s, it);
+  } else if (s.tipo === 'buzzer') {
+    pinos = joySelectPino(s.pino, s.uid, 'pino', false);
+    corpo = joyRenderSons(s, usadas);
   } else if (s.tipo === 'led') {
     pinos = joySelectPino(s.pino, s.uid, 'pino', false);
     const opcoes = ['', ...usadas];
@@ -277,6 +349,7 @@ function joyRenderBarra() {
   el.textContent = txt;
   el.className = 'joy-estado ' + cls;
   $('#bt-joy-monitor').classList.toggle('ligado', MON.aberto);
+  joyRenderApp();
   $('#bt-joy-monitor').lastChild.textContent = MON.aberto ? ' Testando' : ' Testar';
 }
 
@@ -321,6 +394,17 @@ function joyAoClicar(ev) {
     case 'tirar-faixa':
       s.faixas.splice(+faixaEl.dataset.faixa, 1);
       break;
+    case 'tirar-som':
+      s.sons.splice(+bt.closest('.joy-som').dataset.som, 1);
+      break;
+    case 'mais-som': {
+      const usada = JoystickGen.listarAcoes(JOY.config.sensores).acoes.find((a) => !(s.sons || []).some((r) => r.tecla === a.tecla));
+      (s.sons = s.sons || []).push({ tecla: usada ? usada.tecla : '*', quando: 'apertar', som: 'tiro' });
+      break;
+    }
+    case 'ouvir':
+      joyOuvir(s.sons[+bt.closest('.joy-som').dataset.som]);
+      return;
     case 'mais-faixa': {
       const lim = s.tipo === 'ultra' ? 400 : 1023;
       const ult = s.faixas[s.faixas.length - 1];
@@ -345,7 +429,8 @@ function joyAoMudar(ev) {
   const campo = el.dataset.campo;
   if (!campo) return;
   const faixaEl = el.closest('.joy-faixa');
-  const alvo = faixaEl ? s.faixas[+faixaEl.dataset.faixa] : s;
+  const somEl = el.closest('.joy-som');
+  const alvo = faixaEl ? s.faixas[+faixaEl.dataset.faixa] : (somEl ? s.sons[+somEl.dataset.som] : s);
   let v = el.value;
   if (['min', 'max', 'msLongo'].includes(campo)) {
     v = parseInt(v, 10);
@@ -354,6 +439,8 @@ function joyAoMudar(ev) {
     v = +v;
   }
   alvo[campo] = v;
+  // motor só existe "enquanto segura"; os outros sons, ao apertar/soltar
+  if (somEl && campo === 'quando') alvo.som = v === 'segurar' ? 'motor' : (alvo.som === 'motor' ? 'tiro' : alvo.som);
   // números: não redesenha a lista (perderia o foco do campo), só os avisos
   joyMudou(el.type === 'number');
 }
@@ -405,7 +492,7 @@ function joyTeclaNoDialogo(ev) {
  * ---------------------------------------------------------- */
 function joyLinhaSerial(linha) {
   const l = String(linha || '').trim();
-  if (l === 'JOYSTICK PRONTO') {
+  if (l.startsWith('JOYSTICK PRONTO')) {
     JOY.conectado = true;
     JOY.ativas.clear();
     document.querySelectorAll('#joy-lista .joy-tecla.ligada').forEach((e) => e.classList.remove('ligada'));
@@ -427,6 +514,104 @@ function joyLinhaSerial(linha) {
 }
 
 /* ------------------------------------------------------------
+ * App MIDE Joystick do PC
+ * ---------------------------------------------------------- */
+async function joyApp(rota, corpo, ms) {
+  const ctl = new AbortController();
+  const t = setTimeout(() => ctl.abort(), ms || 1500);
+  try {
+    const r = await fetch(JOY_APP_URL + rota, corpo === undefined ? { signal: ctl.signal, cache: 'no-store' } : {
+      method: 'POST', signal: ctl.signal, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(corpo),
+    });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    return await r.json();
+  } finally { clearTimeout(t); }
+}
+const joyAppLembra = () => { try { return localStorage.getItem(JOY_APP_CHAVE) === '1'; } catch (e) { return false; } };
+
+async function joyAppChecar() {
+  try {
+    const st = await joyApp('/status');
+    if (st.app !== 'mide-joystick') throw new Error('outro programa');
+    const antes = JOY.app.estado;
+    JOY.app.status = st;
+    JOY.app.estado = 'ligado';
+    try { localStorage.setItem(JOY_APP_CHAVE, '1'); } catch (e) { /* ignora */ }
+    if (antes !== 'ligado' && JOY.gerado && !JOY.gerado.erros.length && st.id_montagem !== JOY.gerado.id) joyAppEnviar(false);
+  } catch (e) {
+    JOY.app.estado = JOY.app.estado === 'nunca' ? 'nunca' : 'fora';
+    JOY.app.status = null;
+  }
+  joyRenderApp();
+  return JOY.app.estado === 'ligado';
+}
+
+async function joyAppEnviar(manual) {
+  const g = JOY.gerado;
+  if (g.erros.length) { if (manual) joyAviso('Corrija os erros em vermelho antes de enviar.'); return false; }
+  try {
+    const r = await joyApp('/montagem', JoystickGen.paraApp(g));
+    if (!r.ok) throw new Error('recusado');
+    JOY.app.estado = 'ligado';
+    JOY.app.idEnviado = g.id;
+    try { localStorage.setItem(JOY_APP_CHAVE, '1'); } catch (e) { /* ignora */ }
+    if (manual) joyAviso(`Montagem enviada para o app (${r.acoes} tecla${r.acoes === 1 ? '' : 's'}).`);
+    joyAppChecar();
+    return true;
+  } catch (e) {
+    JOY.app.estado = JOY.app.estado === 'nunca' ? 'nunca' : 'fora';
+    joyRenderApp();
+    if (manual) joyAbrirDialogoApp();
+    return false;
+  }
+}
+
+function joyAbrirDialogoApp(msg) {
+  $('#joy-app-msg').textContent = msg || 'Não encontrei o app MIDE Joystick aberto neste computador.';
+  const d = $('#joy-dialogo-app');
+  if (!d.open) d.showModal();
+}
+
+function joyRenderApp() {
+  const el = $('#joy-app');
+  const a = JOY.app, st = a.status, g = JOY.gerado;
+  if (a.estado === 'nunca') { el.hidden = true; return; }
+  el.hidden = false;
+  let txt, cls;
+  if (a.estado !== 'ligado' || !st) { txt = 'App fechado'; cls = ''; }
+  else if (st.pausado) { txt = 'App: porta liberada'; cls = 'aviso'; }
+  else if (!st.conectado) { txt = 'App: sem Arduino'; cls = 'aviso'; }
+  else if (g && st.id_placa && st.id_placa !== g.id) { txt = 'App: faça o Upload'; cls = 'aviso'; }
+  else if (g && st.id_montagem !== g.id) { txt = 'App: enviando…'; cls = ''; }
+  else { txt = 'App: pronto ✓'; cls = 'ok'; }
+  el.textContent = txt;
+  el.className = 'joy-estado ' + cls;
+  el.title = st ? `App MIDE Joystick · ${st.conectado ? 'Arduino em ' + st.porta : 'Arduino não conectado'} · ${st.acoes} teclas` : 'Abra o app MIDE Joystick no computador';
+}
+
+function joyBaixarApp() {
+  const z = JoystickGen.zip(JOYSTICK_APP.arquivos.map((a) => ({ nome: 'MIDE Joystick/' + a.nome, texto: a.texto })));
+  baixarArquivo('MIDE Joystick (app do PC).zip', z, 'application/zip');
+  log('App baixado: descompacte numa pasta fixa e dê dois cliques em "Abrir MIDE Joystick.bat".', 'ok');
+}
+
+/* Chamados por gravar() (ide.js): o app solta a porta USB e volta depois. */
+async function joystickAntesDeGravar() {
+  if (JOY.app.estado !== 'ligado') return;
+  try {
+    const r = await joyApp('/soltar', { segundos: 90 }, 2500);
+    if (r.ok) log('App MIDE Joystick soltou a porta USB para a gravação.', 'info');
+  } catch (e) { /* app fechado: segue */ }
+}
+async function joystickDepoisDeGravar(gravou) {
+  if (JOY.app.estado !== 'ligado') return;
+  if (gravou) await joyAppEnviar(false);
+  if (MON.aberto) return;   // o Monitor reabriu: o app espera ele fechar
+  try { await joyApp('/retomar', {}); } catch (e) { /* ignora */ }
+  setTimeout(joyAppChecar, 2500);
+}
+
+/* ------------------------------------------------------------
  * Integração com a IDE (chamado por ide.js)
  * ---------------------------------------------------------- */
 function joystickCodigoAtual() { return JOY.gerado ? JOY.gerado.ino : ''; }
@@ -436,6 +621,7 @@ function joystickAoAbrir() {
   if (!JOY.gerado) JOY.gerado = JoystickGen.gerar(JOY.config);
   joyRenderLista();
   joyRenderBarra();
+  if (joyAppLembra()) joyAppChecar();
   // a aba usa a largura toda: some o currículo e o painel de baixo recolhe
   // (o "Testar" abre o Monitor de novo)
   document.body.classList.add('joy-ativo');
@@ -483,14 +669,24 @@ function joyIniciar() {
   lista.addEventListener('change', joyAoMudar);
 
   // barra
-  $('#bt-joy-monitor').addEventListener('click', () => {
+  $('#bt-joy-monitor').addEventListener('click', async () => {
     if (MON.aberto) { mostrarPainelInf('monitor'); return; }
     mostrarPainelInf('monitor');
     $('#mon-baud').value = '9600';
+    if (JOY.app.estado === 'ligado') {
+      try { await joyApp('/soltar', { segundos: 1800 }, 2500); JOY.app.soltouParaMonitor = true; } catch (e) { /* segue */ }
+    }
     ligarMonitor();
   });
   $('#bt-joy-codigo').addEventListener('click', () => { joyRenderCodigo(); $('#joy-dialogo-codigo').showModal(); });
   $('#bt-joy-zip').addEventListener('click', joyBaixarPacote);
+  $('#bt-joy-app').addEventListener('click', () => joyAppEnviar(true));
+  $('#bt-joy-app-baixar').addEventListener('click', joyBaixarApp);
+  $('#bt-joy-app-tentar').addEventListener('click', async () => {
+    if (await joyAppChecar() && await joyAppEnviar(false)) { $('#joy-dialogo-app').close(); joyAviso('App encontrado — montagem enviada.'); }
+    else joyAbrirDialogoApp('Ainda não encontrei o app. Ele está aberto? O navegador pediu permissão?');
+  });
+  $('#bt-joy-app-fechar').addEventListener('click', () => $('#joy-dialogo-app').close());
   $('#bt-joy-padrao').addEventListener('click', () => {
     if (!confirm('Voltar para o joystick de 4 botões (setas)? A montagem atual será apagada.')) return;
     JOY.config = JoystickGen.configPadrao();
@@ -543,9 +739,17 @@ function joyIniciar() {
   setInterval(() => {
     if ($('#area-joystick').hidden || MON.aberto === monAntes) return;
     monAntes = MON.aberto;
-    if (!MON.aberto) { JOY.conectado = false; JOY.ativas.clear(); }
+    if (!MON.aberto) {
+      JOY.conectado = false; JOY.ativas.clear();
+      if (JOY.app.soltouParaMonitor) { JOY.app.soltouParaMonitor = false; joyApp('/retomar', {}).catch(() => {}); }
+    }
     joyRenderBarra();
   }, 700);
+  // fala com o app a cada 3 s enquanto a aba estiver aberta (só depois do 1º contato,
+  // para não pedir permissão de rede local a quem nunca usou o app)
+  setInterval(() => {
+    if (!$('#area-joystick').hidden && (joyAppLembra() || JOY.app.estado === 'ligado')) joyAppChecar();
+  }, 3000);
 
   JOY.gerado = JoystickGen.gerar(JOY.config);
 }

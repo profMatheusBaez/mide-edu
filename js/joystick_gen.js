@@ -55,13 +55,28 @@
     return TECLAS[l] ? l : null;
   }
 
-  const rotuloTecla = (t) => (t ? (TECLAS[t] || t.toUpperCase()) : '—');
+  /* Sons do buzzer. freq(t) = frequência em Hz no instante t (ms); 0 = acabou.
+   * As mesmas contas viram C++ no .ino (campo c) e tocam na prévia do navegador. */
+  const SONS = {
+    bip:      { nome: 'Bip', dur: 80, freq: (t) => (t < 80 ? 1200 : 0), c: 't < 80', f: '1200' },
+    tiro:     { nome: 'Tiro', dur: 180, freq: (t) => (t < 180 ? 2000 - t * 9 : 0), c: 't < 180', f: '2000 - t * 9' },
+    pulo:     { nome: 'Pulo', dur: 160, freq: (t) => (t < 160 ? 400 + t * 5 : 0), c: 't < 160', f: '400 + t * 5' },
+    moeda:    { nome: 'Moeda', dur: 300, freq: (t) => (t < 300 ? (t < 80 ? 988 : 1319) : 0), c: 't < 300', f: '(t < 80) ? 988 : 1319' },
+    nitro:    { nome: 'Nitro', dur: 700, freq: (t) => (t < 700 ? 500 + t * 3 + (Math.floor(t / 20) % 2) * 300 : 0), c: 't < 700', f: '500 + t * 3 + (t / 20 % 2) * 300' },
+    explosao: { nome: 'Explosão', dur: 400, freq: (t) => (t < 400 ? 60 + Math.floor(Math.random() * (240 - t / 2)) : 0), c: 't < 400', f: 'random(60, 300 - t / 2)' },
+  };
+  /* Motor: toca enquanto a tecla estiver apertada; o ronco sobe nos primeiros 2,5 s. */
+  const MOTOR = { nome: 'Motor', freq: (m, agora) => 55 + Math.min(m, 2500) / 20 + (Math.floor(agora / 30) % 2) * 10 };
+  const QUANDO = { apertar: 'apertou', soltar: 'soltou', segurar: 'segurando' };
+
+  const rotuloTecla = (t) => (t === '*' ? 'qualquer tecla' : (t ? (TECLAS[t] || t.toUpperCase()) : '—'));
 
   const TIPOS = {
     botao: { nome: 'Botão', sigla: 'BOTAO' },
     ultra: { nome: 'Ultrassônico', sigla: 'ULTRA' },
     pot:   { nome: 'Potenciômetro', sigla: 'POT' },
     led:   { nome: 'LED', sigla: 'LED' },
+    buzzer: { nome: 'Buzzer', sigla: 'BUZZER' },
   };
 
   /* Nome de cada sensor: "Botão 1", "Botão 2", "LED 1"… na ordem da lista. */
@@ -133,6 +148,16 @@
         usar(s.pino, it.nome);
         if (!s.tecla) avisos.push(`${it.nome}: escolha a tecla que acende o LED.`);
         else if (!acoes.some((a) => a.tecla === s.tecla)) avisos.push(`${it.nome}: nenhum sensor usa a tecla ${rotuloTecla(s.tecla)}, então o LED não vai acender.`);
+      } else if (s.tipo === 'buzzer') {
+        usar(s.pino, it.nome);
+        if (it.n > 1) erros.push(`${it.nome}: o Arduino Uno toca um som de cada vez — use só um buzzer.`);
+        const sons = s.sons || [];
+        if (!sons.length) avisos.push(`${it.nome}: adicione pelo menos um som.`);
+        sons.forEach((r, i) => {
+          if (!r.tecla) avisos.push(`${it.nome}, som ${i + 1}: escolha a tecla.`);
+          else if (r.tecla !== '*' && !acoes.some((a) => a.tecla === r.tecla)) avisos.push(`${it.nome}, som ${i + 1}: nenhum sensor usa a tecla ${rotuloTecla(r.tecla)}.`);
+          if (r.quando === 'segurar' ? r.som !== 'motor' : !SONS[r.som]) erros.push(`${it.nome}, som ${i + 1}: escolha um som da lista.`);
+        });
       }
       if (s.tipo === 'ultra' || s.tipo === 'pot') {
         const lim = s.tipo === 'ultra' ? 400 : 1023;
@@ -220,6 +245,77 @@
     }
     if (temVars) p('');
 
+    // buzzer: os sons vêm antes de acao(), que chama sonsDaAcao()
+    const buz = itens.find((it) => it.s.tipo === 'buzzer');
+    const numsDaTecla = (t) => (t === '*' ? acoes.map((a) => a.numero) : acoes.filter((a) => a.tecla === t).map((a) => a.numero));
+    const condNums = (nums) => nums.map((n) => `numero == ${n}`).join(' || ');
+    let temSonsAcao = false, temMotor = false;
+    if (buz) {
+      const linhas = (buz.s.sons || []).filter((r) => r.tecla && (r.quando === 'segurar' ? r.som === 'motor' : SONS[r.som]));
+      // "qualquer tecla" primeiro: assim o som de uma tecla específica vence (o último tocarSom manda)
+      const pontuais = linhas.filter((r) => r.quando !== 'segurar' && numsDaTecla(r.tecla).length)
+        .sort((x, y) => (x.tecla === '*' ? 0 : 1) - (y.tecla === '*' ? 0 : 1));
+      const motores = linhas.filter((r) => r.quando === 'segurar' && numsDaTecla(r.tecla).length);
+      const usados = Object.keys(SONS).filter((k) => pontuais.some((r) => r.som === k));
+      temSonsAcao = pontuais.length > 0;
+      temMotor = motores.length > 0;
+      p(`// ${buz.nome}: pino ${buz.s.pino} -> buzzer passivo -> GND`);
+      usados.forEach((k, i) => p(`const int SOM_${k.toUpperCase()} = ${i + 1};`));
+      p('int somAtual = 0;               // som que está tocando (0 = nenhum)');
+      p('unsigned long somInicio = 0;');
+      if (temMotor) p('unsigned long motorInicio = 0;');
+      p('int freqAtual = 0;');
+      p('');
+      p('void tocarSom(int som) {');
+      p('  somAtual = som;');
+      p('  somInicio = millis();');
+      p('}');
+      p('');
+      p('// Só troca o tom quando a frequência muda (0 = silêncio).');
+      p(`void tom(int freq) {`);
+      p('  if (freq == freqAtual) return;');
+      p('  freqAtual = freq;');
+      p(`  if (freq == 0) noTone(${buz.cte});`);
+      p(`  else tone(${buz.cte}, freq);`);
+      p('}');
+      p('');
+      if (temSonsAcao) {
+        p('// Qual som toca quando cada ação começa ou termina.');
+        p('void sonsDaAcao(int numero, bool comecou) {');
+        for (const r of pontuais) {
+          const nums = numsDaTecla(r.tecla);
+          const cond = r.tecla === '*' ? '' : condNums(nums);
+          p(`  // ${rotuloTecla(r.tecla)} ${QUANDO[r.quando]} -> ${SONS[r.som].nome}`);
+          p(`  if (${r.quando === 'soltar' ? '!comecou' : 'comecou'}${cond ? ` && (${cond})` : ''}) tocarSom(SOM_${r.som.toUpperCase()});`);
+        }
+        p('}');
+        p('');
+      }
+      p('// Toca o som atual um pouquinho por vez, sem parar o joystick.');
+      p('void atualizarBuzzer() {');
+      p('  unsigned long t = millis() - somInicio;');
+      p('  int freq = 0;');
+      usados.forEach((k, i) => {
+        p(`  ${i === 0 ? 'if' : 'else if'} (somAtual == SOM_${k.toUpperCase()} && ${SONS[k].c}) freq = ${SONS[k].f};`);
+      });
+      p(`  ${usados.length ? 'else ' : ''}somAtual = 0;`);
+      if (temMotor) {
+        const nums = [...new Set(motores.flatMap((r) => numsDaTecla(r.tecla)))].sort((a, b) => a - b);
+        p(`  // motor: enquanto ${motores.map((r) => rotuloTecla(r.tecla)).join(' ou ')} estiver apertada`);
+        p(`  bool motor = ${nums.map((n) => `acaoAtiva[${n}]`).join(' || ')};`);
+        p('  if (motor && motorInicio == 0) motorInicio = millis();');
+        p('  if (!motor) motorInicio = 0;');
+        p('  if (somAtual == 0 && motor) {');
+        p('    unsigned long m = millis() - motorInicio;   // acelerando...');
+        p('    if (m > 2500) m = 2500;');
+        p('    freq = 55 + m / 20 + (millis() / 30 % 2) * 10;   // ronco: sobe e "treme"');
+        p('  }');
+      }
+      p('  tom(freq);');
+      p('}');
+      p('');
+    }
+
     // ação()
     p('// Começa ou termina uma ação e avisa o computador.');
     p('void acao(int numero, bool comecou) {');
@@ -228,6 +324,7 @@
     p('  Serial.print("A");');
     p('  Serial.print(numero);');
     p('  Serial.println(comecou ? "_DOWN" : "_UP");');
+    if (temSonsAcao) p('  sonsDaAcao(numero, comecou);');
     p('}');
     p('');
 
@@ -362,27 +459,38 @@
       p('');
       funcoes.push('atualizarLeds');
     }
+    if (buz) funcoes.push('atualizarBuzzer');
 
     p('void setup() {');
     p('  Serial.begin(9600);');
     for (const it of itens) {
       const s = it.s;
       if (s.tipo === 'botao') p(`  pinMode(${it.cte}, INPUT_PULLUP);`);
-      else if (s.tipo === 'led') p(`  pinMode(${it.cte}, OUTPUT);`);
+      else if (s.tipo === 'led' || s.tipo === 'buzzer') p(`  pinMode(${it.cte}, OUTPUT);`);
       else if (s.tipo === 'ultra') {
         p(`  pinMode(${it.cte}_TRIG, OUTPUT);`);
         p(`  pinMode(${it.cte}_ECHO, INPUT);`);
       }
     }
-    p('  Serial.println("JOYSTICK PRONTO");');
+    p('  Serial.println("JOYSTICK PRONTO @@ID@@");   // o app do PC confere se é este código');
     p('}');
     p('');
     p('void loop() {');
     funcoes.forEach((f) => p(`  ${f}();`));
     p('  delay(10);   // também serve de "anti-repique" dos botões');
     p('}');
-    return L.join('\n') + '\n';
+    const texto = L.join('\n') + '\n';
+    return texto.replace('@@ID@@', idDoCodigo(texto));
   }
+
+  /* Identificador curto do código (FNV-1a de 32 bits): o Arduino manda junto com o
+   * "JOYSTICK PRONTO" e o app avisa se a placa estiver com outra montagem. */
+  function idDoCodigo(texto) {
+    let h = 0x811c9dc5;
+    for (let i = 0; i < texto.length; i++) { h ^= texto.charCodeAt(i); h = Math.imul(h, 0x01000193) >>> 0; }
+    return ('0000000' + h.toString(16)).slice(-8);
+  }
+  const idDoIno = (ino) => ((/JOYSTICK PRONTO ([0-9a-f]{8})/.exec(ino) || [])[1] || '');
 
   function cap(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
 
@@ -658,11 +766,17 @@ if __name__ == "__main__":
   function gerar(config) {
     const v = validar(config);
     const { acoes } = listarAcoes(config.sensores || []);
+    const ino = gerarIno(config);
     return {
-      ino: gerarIno(config), py: gerarPy(config), bat: gerarBat(config), leiame: gerarLeiaMe(config),
-      acoes: acoes.map((a) => ({ numero: a.numero, tecla: a.tecla, modo: a.modo, descricao: a.descricao, sensor: a.sensor.nome })),
+      ino, py: gerarPy(config), bat: gerarBat(config), leiame: gerarLeiaMe(config), id: idDoIno(ino),
+      acoes: acoes.map((a) => ({ numero: a.numero, tecla: a.tecla, rotulo: rotuloTecla(a.tecla), modo: a.modo, descricao: a.descricao, sensor: a.sensor.nome })),
       erros: v.erros, avisos: v.avisos,
     };
+  }
+
+  /* O que a IDE manda para o app do PC (POST /montagem). */
+  function paraApp(g, porta) {
+    return { versao: 1, id: g.id, porta: porta || '', acoes: g.acoes, enviadoEm: new Date().toISOString() };
   }
 
   /* ------------------------------------------------------------
@@ -723,8 +837,8 @@ if __name__ == "__main__":
   }
 
   const api = {
-    gerar, gerarIno, gerarPy, gerarBat, validar, listarAcoes, zip, crc32, configPadrao,
-    teclaDoEvento, rotuloTecla, TECLAS, TIPOS, PINOS_DIGITAIS, PINOS_ANALOGICOS,
+    gerar, gerarIno, gerarPy, gerarBat, validar, paraApp, idDoIno, listarAcoes, zip, crc32, configPadrao,
+    teclaDoEvento, rotuloTecla, TECLAS, TIPOS, SONS, MOTOR, QUANDO, PINOS_DIGITAIS, PINOS_ANALOGICOS,
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   raiz.JoystickGen = api;
