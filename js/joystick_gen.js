@@ -394,135 +394,206 @@
   function gerarPy(config) {
     const { acoes } = listarAcoes(config.sensores || []);
     const porta = String(config.porta || '').trim();
-    const L = [];
-    const p = (s) => L.push(s);
-    p('# ============================================================');
-    p('# gamepad.py — gerado pela aba Joystick da MIDE EDU');
-    p('# Lê as mensagens do Arduino (A1_DOWN, A1_UP...) e aperta as');
-    p('# teclas no computador, como se fosse o teclado.');
-    p('#');
-    p('# Precisa (uma vez só):  py -m pip install pyserial pydirectinput');
-    p('# Feche o Monitor Serial da IDE antes de rodar: a porta só');
-    p('# pode ser usada por um programa de cada vez.');
-    p('# ============================================================');
-    p('import sys');
-    p('import time');
-    p('');
-    p('try:');
-    p('    import serial');
-    p('    import serial.tools.list_ports');
-    p('    import pydirectinput');
-    p('except ImportError:');
-    p('    print("Faltam bibliotecas. Rode:  py -m pip install pyserial pydirectinput")');
-    p('    input("Tecle Enter para sair...")');
-    p('    sys.exit(1)');
-    p('');
-    p('pydirectinput.PAUSE = 0          # sem espera entre as teclas');
-    p('pydirectinput.FAILSAFE = False');
-    p('');
-    p(`PORTA = ${pyStr(porta)}   # vazio = procura o Arduino sozinho (ex.: "COM3")`);
-    p('VELOCIDADE = 9600');
-    p('');
-    p('# número da ação -> (tecla, modo)');
-    p('#   "segurar": a tecla fica apertada enquanto a ação dura');
-    p('#   "toque":   aperta e solta a tecla uma vez');
-    p('ACOES = {');
-    for (const a of acoes) {
-      p(`    "A${a.numero}": (${pyStr(a.tecla)}, ${pyStr(a.modo)}),   # ${a.descricao}`);
-    }
-    p('}');
-    p('');
-    p('BOTOES_MOUSE = {"mouse_esq": "left", "mouse_dir": "right", "mouse_meio": "middle"}');
-    p('apertadas = set()');
-    p('');
-    p('');
-    p('def apertar(tecla):');
-    p('    if tecla in BOTOES_MOUSE:');
-    p('        pydirectinput.mouseDown(button=BOTOES_MOUSE[tecla])');
-    p('    else:');
-    p('        pydirectinput.keyDown(tecla)');
-    p('    apertadas.add(tecla)');
-    p('');
-    p('');
-    p('def soltar(tecla):');
-    p('    if tecla in BOTOES_MOUSE:');
-    p('        pydirectinput.mouseUp(button=BOTOES_MOUSE[tecla])');
-    p('    else:');
-    p('        pydirectinput.keyUp(tecla)');
-    p('    apertadas.discard(tecla)');
-    p('');
-    p('');
-    p('def soltar_tudo():');
-    p('    for tecla in list(apertadas):');
-    p('        soltar(tecla)');
-    p('');
-    p('');
-    p('def achar_porta():');
-    p('    if PORTA:');
-    p('        return PORTA');
-    p('    portas = list(serial.tools.list_ports.comports())');
-    p('    for p in portas:');
-    p('        texto = (p.description or "") + " " + (p.manufacturer or "")');
-    p('        if any(nome in texto.upper() for nome in ("ARDUINO", "CH340", "CH341", "USB-SERIAL", "USB SERIAL")):');
-    p('            return p.device');
-    p('    for p in portas:');
-    p('        if p.vid in (0x2341, 0x2A03, 0x1A86, 0x0403, 0x10C4):');
-    p('            return p.device');
-    p('    return None');
-    p('');
-    p('');
-    p('def executar(porta):');
-    p('    with serial.Serial(porta, VELOCIDADE, timeout=1) as arduino:');
-    p('        time.sleep(2)   # o Arduino reinicia ao abrir a porta');
-    p('        print("JOYSTICK CONECTADO em", porta, "- deixe esta janela aberta e vá para o jogo.")');
-    p('        while True:');
-    p('            linha = arduino.readline().decode(errors="ignore").strip()');
-    p('            if not linha.startswith("A") or "_" not in linha:');
-    p('                continue');
-    p('            acao, evento = linha.split("_", 1)');
-    p('            if acao not in ACOES:');
-    p('                continue');
-    p('            tecla, modo = ACOES[acao]');
-    p('            print(linha, "->", tecla)');
-    p('            if evento == "DOWN":');
-    p('                if modo == "toque":');
-    p('                    apertar(tecla)');
-    p('                    soltar(tecla)');
-    p('                else:');
-    p('                    apertar(tecla)');
-    p('            elif evento == "UP" and modo == "segurar":');
-    p('                soltar(tecla)');
-    p('');
-    p('');
-    p('def main():');
-    p('    print("=== JOYSTICK MIDE EDU ===")');
-    p('    while True:');
-    p('        porta = achar_porta()');
-    p('        if not porta:');
-    p('            print("Arduino não encontrado. Ligue o cabo USB... (Ctrl+C para sair)")');
-    p('            time.sleep(2)');
-    p('            continue');
-    p('        try:');
-    p('            executar(porta)');
-    p('        except serial.SerialException as erro:');
-    p('            print("Conexão perdida:", erro)');
-    p('            print("Feche o Monitor Serial da IDE se ele estiver aberto.")');
-    p('        finally:');
-    p('            soltar_tudo()');
-    p('        time.sleep(2)');
-    p('');
-    p('');
-    p('if __name__ == "__main__":');
-    p('    try:');
-    p('        main()');
-    p('    except KeyboardInterrupt:');
-    p('        soltar_tudo()');
-    p('        print("Joystick desligado.")');
-    return L.join('\n') + '\n';
+    const tabela = acoes.length
+      ? acoes.map((a) => `    "A${a.numero}": (${pyStr(a.tecla)}, ${pyStr(a.modo)}),   # ${a.descricao}`).join('\n')
+      : '    # (nenhum sensor ligado a uma tecla ainda)';
+    return PY_MODELO
+      .replace('@@PORTA@@', pyStr(porta))
+      .replace('@@ACOES@@', tabela);
   }
+
+  /* O gamepad.py inteiro. @@PORTA@@ e @@ACOES@@ são trocados pela montagem do aluno. */
+  const PY_MODELO = `# ============================================================
+# gamepad.py — gerado pela aba Joystick da MIDE EDU
+# Lê as mensagens do Arduino (A1_DOWN, A1_UP...) e aperta as
+# teclas no computador, como se fosse o teclado.
+#
+# Rode com dois cliques no "Iniciar joystick.bat" ou pelo Thonny
+# (interpretador "Python local", NÃO "MicroPython"/"Arduino").
+# Na primeira vez ele instala sozinho o pyserial e o pydirectinput.
+# ============================================================
+import subprocess
+import sys
+import time
+
+PORTA = @@PORTA@@   # vazio = procura o Arduino sozinho (ex.: "COM3")
+VELOCIDADE = 9600
+
+# número da ação -> (tecla, modo)
+#   "segurar": a tecla fica apertada enquanto a ação dura
+#   "toque":   aperta e solta a tecla uma vez
+ACOES = {
+@@ACOES@@
+}
+
+
+def instalar(pacotes):
+    print("Instalando", " e ".join(pacotes), "(só na primeira vez, precisa de internet)...")
+    comando = [sys.executable, "-m", "pip", "install", "--disable-pip-version-check"]
+    if subprocess.call(comando + ["--user"] + pacotes) != 0:
+        subprocess.call(comando + pacotes)
+    # a pasta de pacotes do usuário pode ter acabado de ser criada: põe no caminho
+    import importlib
+    import site
+    try:
+        site.addsitedir(site.getusersitepackages())
+    except Exception:
+        pass
+    importlib.invalidate_caches()
+
+
+def carregar_bibliotecas():
+    faltam = []
+    try:
+        import serial
+        if not hasattr(serial, "Serial"):
+            print("Existe um pacote errado chamado 'serial' neste Python.")
+            print("Rode:  py -m pip uninstall serial   e depois abra de novo.")
+            return False
+    except ImportError:
+        faltam.append("pyserial")
+    try:
+        import pydirectinput  # noqa: F401
+    except ImportError:
+        faltam.append("pydirectinput")
+    if faltam:
+        if not sys.platform.startswith("win"):
+            print("O pydirectinput só funciona no Windows.")
+            return False
+        instalar(faltam)
+        try:
+            import serial  # noqa: F401
+            import pydirectinput  # noqa: F401
+        except ImportError:
+            print("Não deu para instalar:", ", ".join(faltam))
+            print("No Thonny: menu Ferramentas > Gerenciar pacotes > procure e instale cada um.")
+            print("No terminal: py -m pip install pyserial pydirectinput")
+            return False
+    return True
+
+
+if not carregar_bibliotecas():
+    input("Tecle Enter para sair...")
+    sys.exit(1)
+
+import serial  # noqa: E402
+import serial.tools.list_ports  # noqa: E402
+import pydirectinput  # noqa: E402
+
+pydirectinput.PAUSE = 0          # sem espera entre as teclas
+pydirectinput.FAILSAFE = False
+
+BOTOES_MOUSE = {"mouse_esq": "left", "mouse_dir": "right", "mouse_meio": "middle"}
+apertadas = set()
+
+
+def apertar(tecla):
+    if tecla in BOTOES_MOUSE:
+        pydirectinput.mouseDown(button=BOTOES_MOUSE[tecla])
+    else:
+        pydirectinput.keyDown(tecla)
+    apertadas.add(tecla)
+
+
+def soltar(tecla):
+    if tecla in BOTOES_MOUSE:
+        pydirectinput.mouseUp(button=BOTOES_MOUSE[tecla])
+    else:
+        pydirectinput.keyUp(tecla)
+    apertadas.discard(tecla)
+
+
+def soltar_tudo():
+    for tecla in list(apertadas):
+        soltar(tecla)
+
+
+def achar_porta():
+    if PORTA:
+        return PORTA
+    portas = list(serial.tools.list_ports.comports())
+    for p in portas:
+        texto = ((p.description or "") + " " + (p.manufacturer or "")).upper()
+        if any(nome in texto for nome in ("ARDUINO", "CH340", "CH341", "USB-SERIAL", "USB SERIAL")):
+            return p.device
+    for p in portas:
+        if p.vid in (0x2341, 0x2A03, 0x1A86, 0x0403, 0x10C4):
+            return p.device
+    return None
+
+
+def mostrar_portas():
+    portas = list(serial.tools.list_ports.comports())
+    if not portas:
+        print("Nenhuma porta USB/serial encontrada.")
+    for p in portas:
+        print("  porta", p.device, "-", p.description)
+
+
+def executar(porta):
+    with serial.Serial(porta, VELOCIDADE, timeout=1) as arduino:
+        time.sleep(2)   # o Arduino reinicia ao abrir a porta
+        print("Conectado em", porta, "- deixe esta janela aberta e clique na janela do jogo.")
+        avisou_antigo = False
+        while True:
+            linha = arduino.readline().decode(errors="ignore").strip()
+            if not linha:
+                continue
+            if linha.startswith("BTN_") and not avisou_antigo:
+                print("Este Arduino está com um código ANTIGO. Grave de novo o Joystick.ino pela aba Joystick da MIDE EDU.")
+                avisou_antigo = True
+            if "_" not in linha or linha.split("_", 1)[0] not in ACOES:
+                print("Arduino:", linha)
+                continue
+            acao, evento = linha.split("_", 1)
+            tecla, modo = ACOES[acao]
+            print(linha, "->", tecla)
+            if evento == "DOWN":
+                apertar(tecla)
+                if modo == "toque":
+                    soltar(tecla)
+            elif evento == "UP" and modo == "segurar":
+                soltar(tecla)
+
+
+def main():
+    print("=== JOYSTICK MIDE EDU ===")
+    if "thonny" in sys.executable.lower() or "thonny" in sys.modules:
+        print("Rodando pelo Thonny. Se o Thonny estiver no modo MicroPython/Arduino, ele prende a porta:")
+        print("use Executar > Configurar interpretador > 'Python local'.")
+    mostrar_portas()
+    while True:
+        porta = achar_porta()
+        if not porta:
+            print("Arduino não encontrado. Ligue o cabo USB... (Ctrl+C para sair)")
+            time.sleep(2)
+            continue
+        try:
+            executar(porta)
+        except serial.SerialException as erro:
+            texto = str(erro)
+            if "denied" in texto.lower() or "negado" in texto.lower() or "PermissionError" in texto:
+                print("A porta", porta, "está ocupada por outro programa.")
+                print("Feche o Monitor Serial da MIDE EDU (ou a aba dela no navegador), o Arduino IDE e o Thonny no modo MicroPython.")
+            else:
+                print("Conexão perdida:", texto)
+        finally:
+            soltar_tudo()
+        time.sleep(2)
+
+
+if __name__ == "__main__":
+    try:
+        main()
+    except KeyboardInterrupt:
+        soltar_tudo()
+        print("Joystick desligado.")
+`;
 
   /* ------------------------------------------------------------
    * Iniciar joystick.bat (Windows)
+   * Sem blocos ( ... ): um ")" dentro de um echo fecha o bloco e o
+   * cmd fecha a janela sem mostrar o erro. Por isso tudo é goto.
    * ---------------------------------------------------------- */
   function gerarBat() {
     return [
@@ -530,26 +601,27 @@
       'chcp 65001 >nul',
       'title Joystick MIDE EDU',
       'cd /d "%~dp0"',
+      'echo === JOYSTICK MIDE EDU ===',
       'set PY=',
-      'where py >nul 2>nul && set PY=py',
-      'if not defined PY where python >nul 2>nul && set PY=python',
-      'if not defined PY (',
-      '  echo O Python nao foi encontrado neste computador.',
-      '  echo Instale em https://www.python.org/downloads/ marcando "Add Python to PATH".',
-      '  pause',
-      '  exit /b 1',
-      ')',
-      '%PY% -c "import serial, pydirectinput" >nul 2>nul',
-      'if errorlevel 1 (',
-      '  echo Instalando as bibliotecas pyserial e pydirectinput (so na primeira vez)...',
-      '  %PY% -m pip install --user pyserial pydirectinput',
-      ')',
-      ':inicio',
+      'py -3 --version >nul 2>nul && set PY=py -3',
+      'if not defined PY python --version >nul 2>nul && set PY=python',
+      'if not defined PY if exist "%LOCALAPPDATA%\\Programs\\Thonny\\python.exe" set PY="%LOCALAPPDATA%\\Programs\\Thonny\\python.exe"',
+      'if not defined PY if exist "%ProgramFiles(x86)%\\Thonny\\python.exe" set PY="%ProgramFiles(x86)%\\Thonny\\python.exe"',
+      'if not defined PY if exist "%ProgramFiles%\\Thonny\\python.exe" set PY="%ProgramFiles%\\Thonny\\python.exe"',
+      'if not defined PY goto sem_python',
+      'echo Python: %PY%',
+      ':rodar',
       '%PY% gamepad.py',
       'echo.',
-      'echo O programa parou. Reiniciando em 3 segundos... (feche a janela para sair)',
-      'timeout /t 3 /nobreak >nul',
-      'goto inicio',
+      'echo O joystick parou. Tecle algo para abrir de novo, ou feche esta janela.',
+      'pause >nul',
+      'goto rodar',
+      ':sem_python',
+      'echo.',
+      'echo O Python nao foi encontrado neste computador.',
+      'echo Instale em https://www.python.org/downloads/ marcando "Add Python to PATH",',
+      'echo ou instale o Thonny, e abra este arquivo de novo.',
+      'pause',
       '',
     ].join('\r\n');
   }
@@ -570,6 +642,14 @@
       ...acoes.map((a) => `  A${a.numero}  ${a.descricao} -> ${rotuloTecla(a.tecla)} (${a.modo})`),
       '',
       'Funciona no Windows. Alguns jogos só aceitam as teclas se a janela do jogo estiver em foco.',
+      '',
+      'Se não funcionar:',
+      '- A janela mostra "porta ocupada": feche o Monitor Serial da MIDE EDU (ou a aba dela no',
+      '  navegador), o Arduino IDE e o Thonny no modo MicroPython. Só um programa usa a porta.',
+      '- Pelo Thonny: Executar > Configurar interpretador > "Python local" (não MicroPython/Arduino).',
+      '  Faltando biblioteca: Ferramentas > Gerenciar pacotes > instale pyserial e pydirectinput.',
+      '- A janela mostra "código ANTIGO": grave de novo o Joystick.ino pela aba Joystick.',
+      '- A janela mostra A1_DOWN mas o jogo não mexe: clique na janela do jogo para ela ficar em foco.',
       '',
     ];
     return linhas.join('\r\n');

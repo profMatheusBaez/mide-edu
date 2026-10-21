@@ -611,5 +611,19 @@ MIDE VM do site.
   **firmware real da MIDE VM** no simulador: toque curto, toque longo, ultrassônico em duas
   faixas, potenciômetro com ruído e o LED, conferindo a sequência exata de mensagens.
 
-**Ainda não testado:** no Uno real e com o `gamepad.py` num jogo no Windows.
+**Se não funcionar** (a janela do `gamepad.py` explica cada caso):
+- *O `.bat` abre e fecha:* era um `)` dentro de um `echo` no `.bat` da 1ª versão (fechava o bloco
+  `if (...)` e o cmd saía sem mostrar erro). Corrigido: o `.bat` não usa mais blocos, acha o
+  Python (`py`, `python` ou o Python do **Thonny**) e para com `pause` em qualquer problema.
+- *Falta biblioteca:* o próprio `gamepad.py` instala `pyserial` e `pydirectinput` com o Python que
+  estiver rodando (também no Thonny). Sem internet: Thonny > Ferramentas > Gerenciar pacotes.
+- *RX/TX piscam e nada acontece:* TX piscando = o Arduino está mandando as mensagens; RX piscando =
+  outro programa está escrevendo na placa — normalmente o **Thonny no modo MicroPython/Arduino**,
+  que prende a porta. Use o interpretador "Python local". Também prendem a porta: o Monitor Serial
+  da MIDE EDU e o Arduino IDE.
+- *A janela mostra "código ANTIGO" (`BTN_1_DOWN`):* a placa está com o `.ino` da versão de teste;
+  grave de novo pela aba Joystick.
+
+**Ainda não testado:** no Uno real e com o `gamepad.py` num jogo no Windows (o `.bat` não pôde ser
+executado na nuvem — só revisado).
 
