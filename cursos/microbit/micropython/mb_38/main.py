@@ -1,0 +1,5 @@
+from microbit import *
+import music
+
+music.play(music.BIRTHDAY)
+display.show(Image.HEART)

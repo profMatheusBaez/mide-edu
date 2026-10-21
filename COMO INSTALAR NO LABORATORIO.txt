@@ -1,0 +1,54 @@
+MIDE EDU - INSTALAÇÃO NO LABORATÓRIO (ARDUINO UNO)
+====================================================
+
+PRIMEIRO PC (com internet)
+--------------------------
+1. Descompacte este zip em qualquer lugar (pendrive, Downloads...).
+2. Dê dois cliques em INSTALAR.bat.
+   - Se o Windows mostrar "O Windows protegeu o computador":
+     clique em "Mais informações" e depois em "Executar assim mesmo".
+3. Espere (5 a 15 minutos, depende da internet). O instalador:
+   - copia a IDE para C:\MIDE EDU
+   - baixa o Python portátil e o arduino-cli para dentro dessa pasta
+   - instala o suporte ao Arduino Uno e as bibliotecas Servo e
+     LiquidCrystal I2C (também dentro da pasta)
+   - cria o atalho "MIDE EDU" na Área de Trabalho
+   - confere tudo: no fim aparece "PRONTO!" em verde.
+
+Não precisa ser administrador. Nada é instalado no Windows: tudo
+fica em C:\MIDE EDU.
+
+
+OS OUTROS 14 PCs (mais rápido, sem baixar nada)
+------------------------------------------------
+1. Copie a pasta C:\MIDE EDU do primeiro PC para um pendrive
+   (fica com uns 300 MB).
+2. Em cada PC, abra a pasta no pendrive e dê dois cliques em
+   INSTALAR.bat. Ele copia tudo para C:\MIDE EDU e cria o atalho,
+   sem usar a internet.
+
+(Também dá para rodar o INSTALAR.bat do zip em cada PC com internet;
+ele baixa tudo de novo em cada um.)
+
+
+ANTES DA AULA
+-------------
+- Ligue o Arduino no USB e dê dois cliques em C:\MIDE EDU\VERIFICAR.bat.
+  Ele compila dois programas de teste e mostra em qual porta COM
+  a placa está. Não grava nada na placa.
+- Arduinos CLONES (chip CH340) precisam do driver CH340 no Windows.
+  Se o VERIFICAR.bat avisar que falta, peça a quem tem senha de
+  administrador para instalar o driver CH340 (uma vez por PC).
+
+
+DICAS
+-----
+- Atalho para TODOS os usuários do Windows: rode o INSTALAR.bat como
+  administrador (botão direito > "Executar como administrador").
+  Sem isso, o atalho aparece só para o usuário que instalou; os
+  outros podem abrir C:\MIDE EDU\MIDE EDU.vbs.
+- O progresso dos alunos (XP, missões) fica salvo no navegador de
+  cada PC/usuário. Reinstalar ou atualizar a IDE NÃO apaga o progresso.
+- Para atualizar a IDE depois: rode o INSTALAR.bat da versão nova.
+  Python, arduino-cli e bibliotecas que já estão no PC são mantidos.
+- A IDE não abre? Veja C:\MIDE EDU\servidor.log e rode o VERIFICAR.bat.

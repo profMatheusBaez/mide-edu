@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 400" width="520" height="400" role="img" aria-label="Placa micro:bit V2 com matriz de 25 LEDs, dois botões e o logotipo de toque">
+  <defs>
+    <linearGradient id="pcb" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2b2f36"/><stop offset="1" stop-color="#1b1e23"/>
+    </linearGradient>
+    <linearGradient id="ouro" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f2d16b"/><stop offset="1" stop-color="#b98a1e"/>
+    </linearGradient>
+    <radialGradient id="led" cx=".5" cy=".5" r=".5">
+      <stop offset="0" stop-color="#ff5a4d"/><stop offset="1" stop-color="#b3251b"/>
+    </radialGradient>
+  </defs>
+  <rect x="30" y="50" width="460" height="290" rx="26" fill="url(#pcb)" stroke="#0e1013" stroke-width="3"/>
+  <!-- furos das argolas -->
+  <g fill="#0e1013" stroke="url(#ouro)" stroke-width="7">
+    <circle cx="62" cy="322" r="11"/><circle cx="170" cy="322" r="11"/><circle cx="260" cy="322" r="11"/>
+    <circle cx="350" cy="322" r="11"/><circle cx="458" cy="322" r="11"/>
+  </g>
+  <!-- matriz 5x5 de LEDs -->
+  <rect x="180" y="86" width="160" height="150" rx="10" fill="#111317"/>
+  <g fill="url(#led)">
+    <rect x="192" y="98" width="20" height="20" rx="5" opacity=".35"/><rect x="222" y="98" width="20" height="20" rx="5"/>
+    <rect x="252" y="98" width="20" height="20" rx="5" opacity=".35"/><rect x="282" y="98" width="20" height="20" rx="5"/>
+    <rect x="312" y="98" width="20" height="20" rx="5" opacity=".35"/>
+    <rect x="192" y="126" width="20" height="20" rx="5"/><rect x="222" y="126" width="20" height="20" rx="5"/>
+    <rect x="252" y="126" width="20" height="20" rx="5" opacity=".35"/><rect x="282" y="126" width="20" height="20" rx="5"/>
+    <rect x="312" y="126" width="20" height="20" rx="5"/>
+    <rect x="192" y="154" width="20" height="20" rx="5" opacity=".35"/><rect x="222" y="154" width="20" height="20" rx="5"/>
+    <rect x="252" y="154" width="20" height="20" rx="5"/><rect x="282" y="154" width="20" height="20" rx="5"/>
+    <rect x="312" y="154" width="20" height="20" rx="5" opacity=".35"/>
+    <rect x="192" y="182" width="20" height="20" rx="5" opacity=".35"/><rect x="222" y="182" width="20" height="20" rx="5" opacity=".35"/>
+    <rect x="252" y="182" width="20" height="20" rx="5"/><rect x="282" y="182" width="20" height="20" rx="5" opacity=".35"/>
+    <rect x="312" y="182" width="20" height="20" rx="5" opacity=".35"/>
+    <rect x="192" y="210" width="20" height="20" rx="5" opacity=".35"/><rect x="222" y="210" width="20" height="20" rx="5" opacity=".35"/>
+    <rect x="252" y="210" width="20" height="20" rx="5" opacity=".35"/><rect x="282" y="210" width="20" height="20" rx="5" opacity=".35"/>
+    <rect x="312" y="210" width="20" height="20" rx="5" opacity=".35"/>
+  </g>
+  <!-- botões A e B -->
+  <g>
+    <circle cx="96" cy="160" r="26" fill="#0e1013"/><circle cx="96" cy="160" r="18" fill="#dfe3e8"/>
+    <circle cx="424" cy="160" r="26" fill="#0e1013"/><circle cx="424" cy="160" r="18" fill="#dfe3e8"/>
+    <text x="96" y="208" text-anchor="middle" font-family="Arial, sans-serif" font-size="22" font-weight="700" fill="#f2d16b">A</text>
+    <text x="424" y="208" text-anchor="middle" font-family="Arial, sans-serif" font-size="22" font-weight="700" fill="#f2d16b">B</text>
+  </g>
+  <!-- logotipo de toque (marca genérica, sem o desenho oficial) -->
+  <rect x="235" y="62" width="50" height="14" rx="7" fill="url(#ouro)"/>
+  <!-- microfone e alto-falante -->
+  <circle cx="290" cy="262" r="5" fill="#7f8792"/>
+  <circle cx="226" cy="262" r="12" fill="#0e1013" stroke="#4b525c" stroke-width="3"/>
+  <!-- conector de borda -->
+  <g fill="url(#ouro)">
+    <rect x="50" y="338" width="24" height="14" rx="3"/><rect x="82" y="338" width="14" height="14" rx="3"/>
+    <rect x="104" y="338" width="14" height="14" rx="3"/><rect x="126" y="338" width="14" height="14" rx="3"/>
+    <rect x="148" y="338" width="14" height="14" rx="3"/><rect x="170" y="338" width="14" height="14" rx="3"/>
+    <rect x="192" y="338" width="14" height="14" rx="3"/><rect x="214" y="338" width="14" height="14" rx="3"/>
+    <rect x="236" y="338" width="14" height="14" rx="3"/><rect x="258" y="338" width="14" height="14" rx="3"/>
+    <rect x="280" y="338" width="14" height="14" rx="3"/><rect x="302" y="338" width="14" height="14" rx="3"/>
+    <rect x="324" y="338" width="14" height="14" rx="3"/><rect x="346" y="338" width="14" height="14" rx="3"/>
+    <rect x="368" y="338" width="14" height="14" rx="3"/><rect x="390" y="338" width="14" height="14" rx="3"/>
+    <rect x="412" y="338" width="14" height="14" rx="3"/><rect x="446" y="338" width="24" height="14" rx="3"/>
+  </g>
+</svg>

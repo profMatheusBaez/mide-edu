@@ -1,0 +1,10 @@
+Componentes de terceiros da placa micro:bit V2 (todos MIT; ver LICENSE-* em cada pasta)
+
+microbit/microbit-connection.js   @microbit/microbit-connection 1.0.0 (+ nrf-intel-hex, universal-hex, capacitor bluetooth-le p/ Web Bluetooth), bundle IIFE global MicrobitConnection
+microbit/microbit-fs.js           @microbit/microbit-fs 0.10.1, bundle IIFE global MicrobitFs
+microbit/micropython-v2.hex       MicroPython para micro:bit V2, release v2.1.2 (microbit-foundation/micropython-microbit-v2)
+makecode/target.json + hexcache/  pxt-microbit 9.1.1 (target e runtimes C++ pré-compilados)
+makecode/pxtworker.js             pxt-core 13.0.1 (compilador TypeScript -> código de máquina)
+makecode/makecode-compiler.js     makecode-core 1.7.10 + makecode-browser 1.3.6 (serviço de compilação), bundle IIFE global MakeCodeCompiler
+
+Runtimes em hexcache/: apenas as combinações do currículo (core+radio+microphone e core+bluetooth+microphone).

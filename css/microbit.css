@@ -1,0 +1,130 @@
+/* ============================================================
+ * microbit.css — placa BBC micro:bit V2
+ * ------------------------------------------------------------
+ * Card da tela de escolha, barra de conexão USB e detalhes do
+ * currículo. O chip de estado reaproveita .lego-chip (lego.css).
+ * Cores só por variáveis de tema, claro e escuro.
+ * ============================================================ */
+
+/* ---------- card da tela inicial ---------- */
+.mb-card .board-chip { color: #8a1f6b; background: #fbe6f3; }
+.mb-card .board-cta { background: #a3287e; }
+.mb-card:hover, .mb-card[aria-pressed="true"] { border-color: #a3287e; }
+.mb-card .board-photo { background: #eef1f4; }
+[data-tema="escuro"] .mb-card .board-chip { color: #ffb4e3; background: #3a1f33; }
+[data-tema="escuro"] .mb-card[aria-pressed="true"] { border-color: #ff8fd3; }
+#board-language-mb button { background: #a3287e; }
+#board-language-mb button + button { background: #173e67; }
+
+/* ---------- barra de cima: conectar a micro:bit ---------- */
+#mb-hub { display: flex; align-items: center; gap: 8px; flex: 0 1 auto; min-width: 0; }
+#mb-hub[hidden] { display: none; }
+#mb-hub .tb-btn:disabled { opacity: .5; cursor: not-allowed; }
+.lego-chip.gravando { color: var(--txt); border-color: var(--aviso); }
+.lego-chip.gravando::before { background: var(--aviso); animation: lego-pulsa .7s ease-in-out infinite; }
+
+/* ---------- sem Editor de placa/porta ---------- */
+body.modo-microbit #seletor-placa { display: none; }
+body.modo-microbit #bt-mon-ligar, body.modo-microbit #mon-baud { display: none; }
+
+/* ---------- lateral: 18 módulos ---------- */
+body.modo-microbit .conceito-img { max-height: 210px; object-fit: contain; background: #fff; border-radius: 12px; }
+.mb-lateral-aviso {
+  margin: 0 2px 10px; padding: 9px 11px; border-radius: 10px;
+  border: 1px solid var(--aviso); color: var(--aviso); font-size: 12px; line-height: 1.5;
+}
+.mb-ligacao { margin: 10px 0; border-collapse: collapse; width: 100%; font-size: 12px; }
+.mb-ligacao th, .mb-ligacao td { border: 1px solid var(--borda); padding: 5px 8px; text-align: left; }
+.mb-ligacao th { background: var(--painel2, var(--painel)); }
+
+/* ---------- paleta da missão (Blocos) ---------- */
+.mb-paleta-linha { padding: 6px 10px 0; }
+.mb-paleta-linha[hidden] { display: none; }
+.mb-paleta-linha button {
+  width: 100%; border: 1px solid var(--borda); background: var(--painel2, var(--painel)); color: var(--txt2);
+  font: inherit; font-size: 11px; padding: 5px 8px; border-radius: 8px; cursor: pointer;
+}
+.mb-paleta-linha button[aria-pressed="true"] { color: var(--txt); border-color: var(--ok); }
+
+/* ---------- alternar JS | Python no painel de código dos Blocos ---------- */
+.blocos-codigo-cab .mb-visao { float: right; display: inline-flex; gap: 4px; }
+.blocos-codigo-cab .mb-visao button {
+  border: 1px solid var(--borda); background: var(--painel2, var(--painel)); color: var(--txt2);
+  font: inherit; font-size: 11px; padding: 2px 8px; border-radius: 8px; cursor: pointer;
+}
+.blocos-codigo-cab .mb-visao button[aria-pressed="true"] { color: var(--txt); border-color: var(--ok); }
+
+/* cabeçalho do painel de código: rótulo e chave JS | Py na mesma linha, quebrando se faltar espaço */
+.blocos-codigo-cab { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 8px; }
+.blocos-codigo-cab .mb-visao { float: none; }
+
+/* ---------- Bluetooth e Painel ao vivo (só na trilha JavaScript) ---------- */
+#mb-hub .tb-btn[aria-disabled="true"] { opacity: .5; cursor: not-allowed; }
+#mb-ble-estado[hidden] { display: none; }
+#aba-aovivo[hidden] { display: none; }
+
+#painel-aovivo { overflow: auto; }
+#av-grade {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 10px;
+  padding: 10px 12px; align-items: start;
+}
+.av-cartao {
+  position: relative; border: 1px solid var(--borda); border-radius: 12px; padding: 8px 12px 10px;
+  background: var(--painel2, var(--painel)); color: var(--txt); min-height: 120px;
+}
+.av-cartao h3 { margin: 0 0 8px; font-size: 12px; font-weight: 700; display: flex; justify-content: space-between; gap: 6px; }
+.av-cartao h3 small { color: var(--txt2); font-weight: 500; font-size: 11px; }
+.av-vazio { display: none; margin: 0; color: var(--txt2); font-size: 11px; }
+.av-cartao[data-sem-dados="true"] > :not(h3):not(.av-vazio) { opacity: .28; }
+.av-cartao[data-sem-dados="true"] .av-vazio {
+  display: block; position: absolute; left: 0; right: 0; bottom: 8px; text-align: center;
+}
+
+/* acelerômetro: barras que crescem do centro */
+.av-barra { display: grid; grid-template-columns: 14px 1fr 52px; gap: 8px; align-items: center; margin: 7px 0; font-size: 11px; }
+.av-barra b { color: var(--txt2); }
+.av-barra output { text-align: right; font-variant-numeric: tabular-nums; color: var(--txt2); }
+.av-trilho { position: relative; height: 10px; border-radius: 6px; background: var(--fundo, rgba(127,127,127,.18)); border: 1px solid var(--borda); overflow: hidden; }
+.av-trilho .av-mid { position: absolute; left: 50%; top: 0; bottom: 0; width: 1px; background: var(--txt2); opacity: .6; }
+.av-trilho .av-preench { position: absolute; top: 0; bottom: 0; left: 50%; width: 0; background: #a3287e; transition: left .08s linear, width .08s linear; }
+[data-tema="escuro"] .av-trilho .av-preench { background: #ff8fd3; }
+
+/* botões A e B */
+.av-botoes { display: flex; gap: 18px; justify-content: center; padding: 10px 0 4px; }
+.av-botao {
+  width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center;
+  border: 2px solid var(--borda); font-weight: 800; color: var(--txt2); transition: background .06s, color .06s, transform .06s;
+}
+.av-botao.apertado { background: #a3287e; border-color: #a3287e; color: #fff; transform: scale(.92); }
+[data-tema="escuro"] .av-botao.apertado { background: #ff8fd3; border-color: #ff8fd3; color: #1a1a2e; }
+
+/* bússola */
+.av-dial { display: block; width: 116px; height: 116px; margin: 0 auto; }
+.av-aro { fill: none; stroke: var(--borda); stroke-width: 2; }
+.av-pt { font-size: 11px; font-weight: 700; fill: var(--txt2); text-anchor: middle; }
+.av-norte { fill: #d0342c; }
+.av-sul { fill: var(--txt2); opacity: .55; }
+.av-eixo { fill: var(--txt); }
+#av-agulha { transition: transform .12s linear; }
+
+/* temperatura */
+.av-temp { display: flex; align-items: flex-end; gap: 14px; padding-top: 4px; }
+.av-temp output { font-size: 26px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.av-termo { position: relative; width: 14px; height: 64px; border: 2px solid var(--borda); border-radius: 8px; overflow: hidden; margin-left: auto; }
+.av-termo i { position: absolute; left: 0; right: 0; bottom: 0; height: 0; background: #d0342c; transition: height .2s ease; }
+
+@media (prefers-reduced-motion: reduce) {
+  .av-trilho .av-preench, .av-botao, #av-agulha, .av-termo i { transition: none; }
+}
+
+/* telas estreitas: os chips de estado viram só a bolinha colorida (o texto fica no title) */
+@media (max-width: 960px) {
+  #mb-hub .lego-chip { font-size: 0; gap: 0; padding: 0 10px; max-width: 32px; }
+  #mb-hub { gap: 4px; }
+  #mb-ble-estado { display: none; }   /* o botão Bluetooth fica destacado quando conectado */
+}
+#bt-mb-ble.ativo { box-shadow: inset 0 0 0 2px var(--ok); }
+
+/* Painel ao vivo: opção "incluir em todo envio" */
+.av-sempre { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted, inherit); cursor: pointer; margin-right: 8px; white-space: nowrap; }
+.av-sempre input { accent-color: var(--ok, #16a34a); cursor: pointer; }

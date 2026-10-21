@@ -1,0 +1,17 @@
+{
+  "name": "ide-web-ferramentas",
+  "private": true,
+  "description": "Testes de desenvolvimento da MIDE EDU (Node). Nao fazem parte do app.",
+  "devDependencies": {
+    "@microbit/microbit-connection": "^1.0.0",
+    "@microbit/microbit-fs": "^0.10.1",
+    "@microbit/micropython-microbit-stubs": "1.0.0",
+    "blockly": "13.3.0",
+    "esbuild": "^0.28.2",
+    "makecode": "1.3.6",
+    "makecode-core": "1.7.10"
+  },
+  "dependencies": {
+    "makecode-browser": "^1.3.6"
+  }
+}

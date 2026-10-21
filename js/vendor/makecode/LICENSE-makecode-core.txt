@@ -1,0 +1,2 @@
+makecode-core / makecode-browser (microsoft/pxt-mkc) — MIT License
+Copyright (c) Microsoft Corporation. Consulte https://github.com/microsoft/pxt-mkc/blob/master/LICENSE

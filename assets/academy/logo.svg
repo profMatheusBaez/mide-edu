@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" fill="none" role="img" aria-label="MIDE EDU">
+  <defs>
+    <linearGradient id="mide-g" x1="9" y1="9" x2="39" y2="39" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#00a9ba"/>
+      <stop offset="1" stop-color="#173e67"/>
+    </linearGradient>
+  </defs>
+  <g stroke="#0099aa" stroke-width="3" stroke-linecap="round">
+    <path d="M15.5 3.5v6M24 3.5v6M32.5 3.5v6M15.5 38.5v6M24 38.5v6M32.5 38.5v6M3.5 15.5h6M3.5 24h6M3.5 32.5h6M38.5 15.5h6M38.5 24h6M38.5 32.5h6"/>
+  </g>
+  <rect x="9" y="9" width="30" height="30" rx="7.5" fill="url(#mide-g)"/>
+  <path d="M15.5 31.5V17.5L24 26.5L32.5 17.5V31.5" stroke="#fff" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="24" cy="26.5" r="2.4" fill="#ffbb19"/>
+</svg>

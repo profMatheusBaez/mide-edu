@@ -1,0 +1,94 @@
+/* ============================================================
+ * lego.css — placa LEGO Technic (Pybricks)
+ * ------------------------------------------------------------
+ * Barra de conexão do hub (botão + chip de estado + Parar), lista
+ * de Exemplos na lateral e o que some quando não há currículo.
+ * Cores só por variáveis de tema (estilo.css): claro e escuro.
+ * ============================================================ */
+
+/* ---------- barra de cima: hub ---------- */
+#lego-hub { display: flex; align-items: center; gap: 8px; flex: 0 1 auto; min-width: 0; }
+#lego-hub[hidden] { display: none; }
+#lego-hub .tb-btn:disabled { opacity: .5; cursor: not-allowed; }
+
+.lego-chip {
+  display: inline-flex; align-items: center; gap: 7px;
+  height: 30px; padding: 0 12px; border-radius: 15px;
+  border: 1px solid var(--borda); background: var(--painel2, var(--painel));
+  color: var(--txt2); font-size: 12px; font-weight: 600; white-space: nowrap;
+  max-width: 260px; overflow: hidden; text-overflow: ellipsis;
+}
+.lego-chip::before {
+  content: ''; width: 9px; height: 9px; border-radius: 50%; flex: none;
+  background: var(--txt3, #999);
+}
+.lego-chip.ligado { color: var(--txt); border-color: var(--ok); }
+.lego-chip.ligado::before { background: var(--ok); box-shadow: 0 0 6px var(--ok); }
+.lego-chip.rodando { color: var(--txt); border-color: var(--ok); }
+.lego-chip.rodando::before { background: var(--ok); animation: lego-pulsa 1s ease-in-out infinite; }
+.lego-chip.espera::before { background: var(--aviso); animation: lego-pulsa 1s ease-in-out infinite; }
+.lego-chip.aviso { color: var(--aviso); border-color: var(--aviso); }
+.lego-chip.aviso::before { background: var(--aviso); }
+@keyframes lego-pulsa { 50% { opacity: .35; } }
+@media (prefers-reduced-motion: reduce) {
+  .lego-chip.rodando::before, .lego-chip.espera::before { animation: none; }
+}
+
+/* ---------- sem currículo: some o que é de missões ---------- */
+body.modo-lego #curriculo-progresso,
+body.modo-lego #incentivo,
+body.modo-lego #lateral .rodape,
+body.modo-lego #placar,
+body.modo-lego #nav-conquistas,
+body.modo-lego #nav-projetos { display: none; }
+
+/* ---------- lateral: hub + exemplos ---------- */
+.lego-cartao {
+  display: flex; align-items: center; gap: 12px;
+  margin: 4px 2px 10px; padding: 10px 12px;
+  border: 1px solid var(--borda); border-radius: 14px; background: var(--painel2, var(--painel));
+}
+.lego-cartao img { width: 64px; height: 64px; object-fit: contain; flex: none; background: #fff; border-radius: 10px; }
+.lego-cartao strong { display: block; font-size: 14px; color: var(--txt); }
+.lego-cartao small { display: block; margin-top: 2px; font-size: 11px; color: var(--txt2); }
+
+.lego-aviso {
+  margin: 0 2px 10px; padding: 9px 11px; border-radius: 10px;
+  border: 1px solid var(--aviso); color: var(--aviso); font-size: 12px; line-height: 1.5;
+}
+
+.lego-passos { margin: 0 2px 12px; font-size: 12px; color: var(--txt2); }
+.lego-passos summary { cursor: pointer; font-weight: 700; color: var(--txt); padding: 4px 0; }
+.lego-passos summary:focus-visible { outline: 3px solid #ffbb19; outline-offset: 2px; border-radius: 4px; }
+.lego-passos ol { margin: 6px 0 6px 18px; padding: 0; display: grid; gap: 5px; line-height: 1.45; }
+.lego-passos p { margin: 6px 0 0; line-height: 1.45; }
+
+.lego-titulo {
+  margin: 4px 4px 6px; font-size: 11px; font-weight: 800; letter-spacing: .08em;
+  text-transform: uppercase; color: var(--txt2);
+}
+
+.lego-exemplo {
+  display: grid; grid-template-columns: 1fr auto; gap: 3px 8px; align-items: center;
+  width: 100%; text-align: left; margin: 0 0 7px; padding: 10px 12px;
+  border: 1px solid var(--borda); border-radius: 12px; background: var(--painel);
+  color: var(--txt); font: inherit; cursor: pointer;
+}
+.lego-exemplo:hover:not(:disabled) { border-color: #e0a100; }
+.lego-exemplo:focus-visible { outline: 3px solid #ffbb19; outline-offset: 2px; }
+.lego-exemplo:disabled { opacity: .55; cursor: not-allowed; }
+.lego-exemplo .tit { font-size: 13px; font-weight: 700; }
+.lego-exemplo .tipo {
+  font-size: 10px; font-weight: 700; letter-spacing: .05em; padding: 2px 7px; border-radius: 6px;
+  color: #8a5a00; background: #fff2cc;
+}
+[data-tema="escuro"] .lego-exemplo .tipo { color: #ffd166; background: #4a3a10; }
+.lego-exemplo small { grid-column: 1 / -1; font-size: 11px; line-height: 1.45; color: var(--txt2); }
+
+@media (max-width: 960px) {
+  .lego-chip { max-width: 170px; }
+}
+@media (max-width: 680px) {
+  #lego-hub { flex-wrap: wrap; }
+  .lego-cartao img { width: 48px; height: 48px; }
+}

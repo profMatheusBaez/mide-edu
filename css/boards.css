@@ -1,0 +1,64 @@
+#board-picker { width:100vw; height:100dvh; max-width:none; max-height:none; margin:0; padding:0; border:0; color:var(--txt); background:radial-gradient(ellipse at 80% 0%,#c8f1f5 0,transparent 50%),#f3f9fc; overflow:auto; }
+#board-picker::backdrop { background:#f3f9fc; }
+.board-picker-inner { max-width:1320px; margin:auto; padding:26px 36px 18px; font-family:var(--ui); }
+.board-picker-top { display:flex; align-items:center; justify-content:space-between; }
+.board-wordmark { display:inline-flex; align-items:center; gap:10px; font-size:18px; font-weight:800; letter-spacing:.035em; }
+.board-wordmark img { width:34px; height:34px; }
+.board-wordmark b { color:#009cac; }
+#board-theme,#board-cancel { background:transparent; border:1px solid var(--borda); border-radius:25px; padding:9px 15px; color:var(--txt); cursor:pointer; }
+.board-eyebrow { margin:30px 0 12px; color:#008b99; font-size:11px; font-weight:800; letter-spacing:.17em; text-align:center; }
+#board-heading { margin:0; text-align:center; font-size:clamp(32px,4vw,47px); line-height:1.1; letter-spacing:-.035em; }
+.board-intro { text-align:center; margin:17px 0 27px; color:var(--txt2); font-size:14px; }
+.board-options { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:18px; }
+.board-card { display:block; text-align:left; padding:20px 24px 22px; border:1px solid #cfe5eb; background:#fff; border-radius:24px; cursor:pointer; color:var(--txt); box-shadow:0 12px 35px #0b566a0a; transition:transform .18s,border-color .18s; font:inherit; min-width:0; }
+.board-card:hover { transform:translateY(-4px); border-color:#009cac; }
+.board-card:focus-visible,#board-language button:focus-visible,#board-language-mb button:focus-visible { outline:3px solid #ffbb19; outline-offset:4px; }
+.board-card[aria-pressed="true"] { border:2px solid #009cac; padding:19px 23px 21px; }
+.board-chip { display:inline-block; color:#008b99; background:#e6f7f8; padding:6px 10px; border-radius:8px; font-size:10px; font-weight:700; letter-spacing:.06em; }
+.k10-card .board-chip { color:#6654b4; background:#f0edfb; }
+.lego-card .board-chip { color:#8a5a00; background:#fff2cc; }
+.board-photo { height:220px; background:white; border-radius:14px; overflow:hidden; margin:10px 0 12px; display:flex; align-items:center; justify-content:center; }
+.board-photo img { width:100%; height:100%; object-fit:contain; }
+.k10-card .board-photo img { transform:scale(1.35); }
+.board-card-body { display:flex; flex-direction:column; gap:10px; }
+.board-card-body>strong { font-size:25px; letter-spacing:-.035em; }
+.board-card-body>span { font-size:13px; color:var(--txt2); line-height:1.5; min-height:39px; }
+.board-card-body>small { font-size:11px; color:var(--txt2); }
+.board-cta { display:flex; justify-content:space-between; background:#008e9e; color:white; border-radius:10px; padding:12px 16px; font-size:13px; margin-top:6px; }
+.k10-card .board-cta { background:#173e67; }
+.lego-card .board-cta { background:#c98a00; }
+.lego-card:hover,.lego-card[aria-pressed="true"] { border-color:#e0a100; }
+.lego-card .board-photo img { transform:scale(1.05); }
+.lego-card-aviso { color:#8a5a00; font-weight:600; }
+[data-tema="escuro"] .lego-card-aviso { color:#ffd166; }
+#board-language,#board-language-mb { margin:20px auto 0; text-align:center; padding:15px; background:var(--painel); border:1px solid var(--borda); border-radius:16px; }
+#board-language>span,#board-language-mb>span { font-weight:700; }
+#board-language>div,#board-language-mb>div { display:flex; gap:12px; justify-content:center; margin:12px 0; }
+#board-language button,#board-language-mb button { border:0; border-radius:9px; background:#008e9e; color:white; padding:12px 18px; cursor:pointer; }
+#board-language button+button,#board-language-mb button+button { background:#173e67; }
+#board-language small,#board-language-mb small { color:var(--txt2); }
+.board-footer { font-size:11px; color:var(--txt2); text-align:center; margin:18px 0 0; }
+#board-cancel { margin-left:14px; font-size:11px; }
+[data-tema="escuro"] #board-picker { background:radial-gradient(ellipse at 80% 0%,#153e4a 0,transparent 55%),#101f30; }
+[data-tema="escuro"] .board-card { background:#192e42; border-color:#355266; }
+[data-tema="escuro"] .board-eyebrow { color:#59d9df; }
+[data-tema="escuro"] .board-card[aria-pressed="true"] { border-color:#59d9df; }
+#curso-barra { align-items:center; gap:12px; flex-wrap:wrap; padding:10px 14px; border:1px solid var(--borda); border-radius:12px; background:var(--painel); font-size:12px; }
+#curso-barra:not([hidden]) { display:flex; }
+#curso-barra>span { margin-right:auto; }
+#curso-barra select,#curso-barra button { border:1px solid var(--borda); background:var(--painel2); color:var(--txt); padding:6px 9px; border-radius:8px; font:inherit; }
+body[data-placa="k10"] #centro { grid-template-rows:auto minmax(0,1fr) auto auto; }
+body[data-placa="k10"] .conceito-img { max-height:210px; object-fit:contain; background:white; border-radius:12px; }
+#codigo-completo-wrap { min-height:0; flex:1; overflow:auto; }
+#codigo-completo { margin:0; white-space:pre; }
+.k10-notice { padding:12px; border:1px solid var(--borda); border-radius:10px; background:var(--painel2); margin:12px 0; line-height:1.6; }
+.k10-next { margin:14px 0; display:grid; gap:8px; }
+.k10-next li { padding:7px 0; }
+.k10-result { white-space:pre-wrap; font-size:12px; max-height:220px; overflow:auto; }
+#bt-trocar-placa { white-space:nowrap; }
+[hidden] { display:none !important; }
+@media(max-width:1180px) { .board-options { grid-template-columns:repeat(2,minmax(0,1fr)); max-width:760px; margin:0 auto; } }
+@media(max-width:820px) { .board-options { grid-template-columns:1fr; max-width:520px; margin:0 auto; } }
+@media(max-width:960px) { body[data-placa="k10"] #centro { grid-template-rows:auto auto auto auto; } .board-photo { height:190px; } }
+@media(max-width:680px) { .board-picker-inner { padding:18px; } .board-options { grid-template-columns:1fr; gap:16px; } .board-photo { height:190px; } .board-card { padding:18px; } .board-eyebrow { margin-top:25px; } #board-language>div,#board-language-mb>div { flex-direction:column; } .board-wordmark { font-size:15px; } #curso-barra>span { flex-basis:100%; } #bt-trocar-placa { padding:7px; font-size:10px; } }
+@media(prefers-reduced-motion:reduce) { .board-card { transition:none; } }

@@ -1,0 +1,98 @@
+/* ============================================================
+ * blocos.css — MIDE EDU, Modo Blocos
+ * ------------------------------------------------------------
+ * Layout estilo Scratch: a área de scripts (toolbox nativa do
+ * Blockly + canvas, tudo gerenciado pelo próprio Blockly.inject
+ * dentro de #blocos-workspace) ao lado do painel de código
+ * gerado. As cores das categorias vêm de blocos_tema.js (paleta
+ * oficial do Scratch 3, plano §4); aqui só reaproveitamos as
+ * variáveis de tema de estilo.css e restilizamos a toolbox nativa
+ * para lembrar a coluna vertical do Scratch/PictoBlox (plano §5).
+ * ============================================================ */
+
+#area-blocos {
+  display: grid;
+  grid-template-columns: 1fr minmax(220px, 26%);
+  /* #area-blocos é mais um painel dentro de #area-editor (que é
+     display:flex; flex-direction:column — toolbar em cima, painel
+     de conteúdo embaixo), igual a .editor-rolagem/#editor-livre-wrap
+     — por isso flex:1, não altura fixa. */
+  flex: 1;
+  min-height: 0; min-width: 0;
+  background: var(--painel);
+}
+
+/* ---------- área de scripts (toolbox + canvas Blockly) ---------- */
+#blocos-workspace-wrap {
+  position: relative;
+  min-width: 0; min-height: 0;
+  /* zera qualquer transform herdado — o zoom do Blockly é interno
+     ao SVG e não pode conviver com um transform:scale() num
+     ancestral (plano §5 e §12, "armadilha conhecida"). */
+  transform: none;
+}
+#blocos-workspace { position: absolute; inset: 0; }
+
+/* Toolbox nativa do Blockly restilizada: coluna vertical estreita,
+   com cada categoria ocupando uma "pastilha" colorida — visual
+   próximo da coluna de categorias do Scratch. */
+#blocos-workspace .blocklyToolboxDiv {
+  background: var(--painel) !important;
+  border-right: 1px solid var(--borda);
+  padding-top: 8px;
+  font-family: var(--ui);
+}
+#blocos-workspace .blocklyTreeRow {
+  height: auto !important;
+  padding: 8px 10px !important;
+  margin: 2px 6px;
+  border-radius: 8px;
+}
+#blocos-workspace .blocklyTreeLabel {
+  font-family: var(--ui) !important;
+  font-size: 12px !important;
+  font-weight: 600;
+}
+#blocos-workspace .blocklyTreeSelected {
+  background-color: var(--hover) !important;
+}
+#blocos-workspace .blocklyFlyoutBackground { fill-opacity: 1; }
+
+/* ---------- painel de código gerado ---------- */
+#blocos-codigo {
+  display: flex; flex-direction: column;
+  min-width: 0; min-height: 0;
+  background: var(--cod-bg);
+  border-left: 1px solid var(--borda);
+}
+.blocos-codigo-cab {
+  padding: 8px 12px;
+  font-family: var(--ui); font-size: 11.5px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .04em;
+  color: var(--txt2);
+  background: var(--painel2);
+  border-bottom: 1px solid var(--borda);
+}
+#blocos-codigo-saida {
+  flex: 1; min-height: 0;
+  margin: 0; padding: 12px 14px;
+  overflow: auto;
+  font-family: var(--mono);
+  font-size: 12.5px; line-height: 1.55;
+  color: var(--cod-base);
+  white-space: pre;
+}
+.blocos-codigo-aviso {
+  padding: 8px 12px;
+  font-family: var(--ui); font-size: 12px;
+  color: var(--aviso);
+  border-top: 1px solid var(--borda);
+  background: var(--painel2);
+}
+.blocos-codigo-aviso:empty { display: none; }
+
+/* ---------- responsivo mínimo (telas estreitas) ---------- */
+@media (max-width: 980px) {
+  #blocos-codigo { display: none; }
+  #area-blocos { grid-template-columns: 1fr; }
+}
