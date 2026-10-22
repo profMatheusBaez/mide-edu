@@ -569,7 +569,6 @@ function verificarLinha() {
 function trocarAba(qual) {
   if (estado.ocupado) return;
   if (qual === 'completo' && estado.placaCurso !== 'k10' && estado.placaCurso !== 'microbit') return;
-  if (qual === 'blocos' && estado.placaCurso === 'k10') return;
   if (qual === 'treino' && estado.placaCurso === 'lego') return;   // sem Modo Treinamento na placa LEGO
   if (qual === 'joystick' && estado.placaCurso !== 'uno') return;   // a aba Joystick é só do Arduino Uno
   if (estado.aba === 'joystick' && qual !== 'joystick' && typeof joystickAoSair === 'function') joystickAoSair();

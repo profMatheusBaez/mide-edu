@@ -12,13 +12,14 @@
  * ============================================================ */
 
 const vid = (nome) => 'v_' + nome;
-function lit(v) {
+export function lit(v) {
   if (v !== null && typeof v === 'object') return { block: v };
   if (typeof v === 'number') return { block: { type: 'math_number', fields: { NUM: v } } };
+  if (typeof v === 'string' && /^0x[0-9A-F]{6}$/.test(v)) return { block: { type: 'k10_cor', fields: { COR: v } } };
   if (typeof v === 'string') return { block: { type: 'text', fields: { TEXT: v } } };
   throw new Error('valor inválido: ' + v);
 }
-const b = (type, fields, inputs) => {
+export const b = (type, fields, inputs) => {
   const o = { type };
   if (fields && Object.keys(fields).length) o.fields = fields;
   if (inputs && Object.keys(inputs).length) o.inputs = inputs;
@@ -29,7 +30,7 @@ function pilha(lista) {
   for (let i = 0; i < l.length - 1; i++) l[i].next = { block: l[i + 1] };
   return l[0];
 }
-const corpo = (nome, lista) => (lista && lista.length ? { [nome]: { block: pilha(lista) } } : {});
+export const corpo = (nome, lista) => (lista && lista.length ? { [nome]: { block: pilha(lista) } } : {});
 
 /* ---------- estrutura ---------- */
 export function programa(setup, loop) {
@@ -60,6 +61,9 @@ export const pare = () => b('controle_pare');
 const OPS = { '>': 'operador_maior', '<': 'operador_menor', '==': 'operador_igual', '>=': 'operador_maior_igual', '<=': 'operador_menor_igual', '!=': 'operador_diferente' };
 export const cmp = (a, op, c) => b(OPS[op], null, { A: lit(a), B: lit(c) });
 export const e = (a, c) => b('operador_e', null, { A: lit(a), B: lit(c) });
+export const ou = (a, c) => b('operador_ou', null, { A: lit(a), B: lit(c) });
+export const soma = (a, c) => b('operador_soma', null, { A: lit(a), B: lit(c) });
+export const mult = (a, c) => b('operador_multiplicacao', null, { A: lit(a), B: lit(c) });
 export const div = (a, c) => b('operador_divisao', null, { A: lit(a), B: lit(c) });
 export const resto = (a, c) => b('operador_resto', null, { A: lit(a), B: lit(c) });
 export const sub = (a, c) => b('operador_subtracao', null, { A: lit(a), B: lit(c) });

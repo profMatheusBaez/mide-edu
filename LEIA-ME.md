@@ -734,3 +734,48 @@ Chrome/Edge no Windows).
    interrompe.
 6. Puxe o cabo e ligue de novo → o estado volta para "conectada" sozinho.
 
+
+## 17. Aba Blocos: modo Livre e modo Guiado (Uno, micro:bit e K10)
+
+A aba **Blocos** tem dois modos, no seletor **Guiado | Livre** acima dos blocos (a escolha
+fica guardada por placa):
+
+- **Livre**: todos os blocos liberados; o aluno monta o próprio programa (um rascunho por placa).
+- **Guiado**: a missão aberta no currículo vira um passo a passo. A barra diz o que fazer
+  ("Passo 3 de 9 — Arraste «…» e encaixe dentro de «…»"), e o que fazer **pisca**: primeiro
+  a categoria da paleta, depois o bloco certo dentro dela, depois o encaixe onde ele vai e,
+  por fim, o campo que o aluno precisa ajustar (número, cor, pino…). Um bloco no lugar
+  errado pisca em vermelho com a explicação. A paleta só mostra os blocos daquela missão.
+  Quando o programa fica igual ao da missão, a barra mostra **Programa montado!** e o envio
+  para a placa conclui a missão. Um rascunho por missão.
+
+**Missões com guia:** micro:bit (180: 90 em JavaScript e 90 em MicroPython, os mesmos
+blocos), Arduino Uno (as 40) e UNIHIKER K10 (as 60, em C++ e em MicroPython). Cores e
+ícones seguem o Scratch/PictoBlox: categorias do Scratch (Eventos, Controle, Operadores,
+Variáveis) e extensões de hardware com ícone e cor próprios.
+
+**UNIHIKER K10 em blocos.** Os mesmos blocos geram os dois códigos — o painel mostra o da
+linguagem escolhida no curso (C++ ou MicroPython). Categorias: K10 (LEDs RGB, cores,
+microSD e foto), Tela (texto, desenhos, câmera, QR Code, imagem), Sensores (botões, luz,
+acelerômetro, gestos, temperatura e umidade), Som (microfone, tom, gravar/tocar no
+microSD), Motores (driver DFRobot, M1–M4 e servo) e Comunicação (Monitor Serial e Wi‑Fi). O MicroPython gerado lê os sensores de verdade
+(`light`, `acce`, `temp_humi`, `button`). No firmware MicroPython 0.9.2 da UNIHIKER ainda
+não há volume do microfone, tom, foto/imagem do microSD nem o driver de motores: nesses
+blocos o MicroPython mostra no Monitor o que aconteceria (o C++ faz de verdade). O C++ da
+trilha (o que foi testado na placa) continua o mesmo; em 16 atividades o C++ dos blocos
+difere só na forma (`if` com chaves, `x += -5` no lugar de `x -= 5`, `?:` vira um "se").
+
+**Arquivos:** `js/blocos_guia.js` (motor do guiado), `js/blocos_aparencia.js` (ícones e
+categorias no estilo PictoBlox), `js/blocos_fases_uno.js`, `js/microbit_fases_gerado.js` e
+`js/k10_fases_gerado.js` (gabaritos gerados), `js/blocos_k10_defs.js`,
+`js/blocos_k10_toolbox.js`, `js/blocos_k10_gen.js` (blocos da K10).
+
+**Gabaritos e testes (só desenvolvimento):**
+- `node ferramentas/gerar_blocos_uno.mjs` — as 40 do Uno (`fases_uno/gabaritos.mjs`).
+- `node ferramentas/gerar_fases_k10.mjs` — as 60 da K10 (`fases_k10/gabaritos.mjs`): compara
+  o C++ com o da trilha, compila com `g++ -fsyntax-only` contra um stub da biblioteca
+  (`fases_k10/stub/`) e roda o MicroPython no CPython com stubs da API (`fases_k10/stub_py/`).
+  Grava `js/k10_fases_gerado.js`.
+- `python3 ferramentas/blocos/testar_guiado_navegador.py [microbit|uno|k10]` (Chromium,
+  `python3 -m http.server 8082` na raiz): um "aluno de mentira" segue o guia de cada missão
+  arrastando o bloco que pisca e confere o código final, mais o destaque piscando e o Livre.

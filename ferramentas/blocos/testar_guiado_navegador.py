@@ -62,7 +62,8 @@ NORMALIZAR = """
 
 
 async def abrir(pg, placa, linguagem):
-    await pg.goto(URL)
+    # K10 em C++: só na MIDE instalada (no site a K10 vai em MicroPython)
+    await pg.goto(URL.replace('web=1', 'web=0') if placa == 'k10' and linguagem == 'cpp' else URL)
     await pg.wait_for_selector('#board-picker[open]')
     if placa == 'uno':
         await pg.click('#choose-uno')
@@ -104,6 +105,14 @@ async def comparar_igual(pg, r):
         if x != y:
             return f'linha {k + 1}: blocos={x!r} missão={y!r}'
     return 'diferente'
+
+
+async def comparar_k10_cpp(pg, r):
+    # o C++ da trilha (testado na placa) tem diferenças só de forma em 16 atividades
+    # (ferramentas/gerar_fases_k10.mjs confere): aqui vale o C++ dos próprios blocos do gabarito
+    esperado = await pg.evaluate("""(id) => { const f = FASES.find((x) => x.id === id); const ws = new Blockly.Workspace();
+      Blockly.serialization.workspaces.load(f.blocos, ws); const c = blocosGerarK10Cpp(ws).codigo; ws.dispose(); return c; }""", r['id'])
+    return await comparar_igual(pg, dict(r, solucao=esperado))
 
 
 async def comparar_compila_uno(pg, r):
@@ -174,7 +183,7 @@ async def principal(placas):
         if 'k10' in placas:
             for lang in ('micropython', 'cpp'):
                 await abrir(pg, 'k10', lang)
-                await missoes(pg, 'k10', lang, comparar_igual)
+                await missoes(pg, 'k10', lang, comparar_igual if lang == 'micropython' else comparar_k10_cpp)
             await destaque(pg, 'k10')
         confere(not erros, 'sem erro de JavaScript', erros[:5])
         await nav.close()

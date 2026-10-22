@@ -61,6 +61,9 @@ function guiaPontos(item, no) {
   const f1 = item.fields || {}, f2 = no.fields || {};
   for (const k of Object.keys(f1)) if (k in f2 && guiaValorCampo(f2[k]) === guiaValorCampo(f1[k])) p += 2;
   if (JSON.stringify(item.extraState || null) === JSON.stringify(no.extraState || null)) p += 1;
+  /* o que já vem encaixado (ex.: "mude para 0" × "mude para texto") */
+  const tipoEm = (ent) => (ent ? ((ent.block || ent.shadow || {}).type || null) : null);
+  for (const [k, ent] of Object.entries(item.inputs || {})) if (no.inputs && tipoEm(ent) && tipoEm(ent) === tipoEm(no.inputs[k])) p += 1;
   return p;
 }
 

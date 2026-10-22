@@ -136,6 +136,8 @@ function blocosFlyoutVariaveisUno(ws) {
   if (vars.length) {
     const id = vars[0].getId();
     itens.push({ kind: 'block', type: 'variables_set', fields: { VAR: { id } }, inputs: { VALUE: _num(0) } });
+    /* K10: textos na tela são comuns — um "mude para" já com um texto */
+    if (typeof estadoBlocos !== 'undefined' && estadoBlocos.perfil === 'k10') itens.push({ kind: 'block', type: 'variables_set', fields: { VAR: { id } }, inputs: { VALUE: _txt('texto') } });
     itens.push({ kind: 'block', type: 'variaveis_somar', fields: { VAR: { id } }, inputs: { VALOR: _num(1) } });
     for (const v of vars) itens.push({ kind: 'block', type: 'variables_get', fields: { VAR: { id: v.getId() } } });
   }

@@ -67,10 +67,11 @@ function selecionarCurso(placa, linguagem = 'cpp') {
   $('#curso-barra').hidden = placa !== 'k10';
   if (placa === 'k10') $('#curso-linguagem').value = linguagem;
   $('#aba-completo').hidden = placa !== 'k10' && placa !== 'microbit';
-  $('#aba-blocos').hidden = placa === 'k10';
+  $('#aba-blocos').hidden = false;
   $('#aba-joystick').hidden = placa !== 'uno';
   if (typeof legoAtivar === 'function') legoAtivar(placa === 'lego');
-  if (typeof blocosTrocarPerfil === 'function') blocosTrocarPerfil(placa === 'lego' ? 'lego' : (placa === 'microbit' ? 'microbit' : 'uno'));
+  if (typeof blocosTrocarPerfil === 'function') blocosTrocarPerfil(placa === 'lego' ? 'lego' : (placa === 'microbit' ? 'microbit' : (placa === 'k10' ? 'k10' : 'uno')));
+  if (placa === 'k10' && typeof blocosLinguagemMudou === 'function') blocosLinguagemMudou();   // C++ ↔ MicroPython: os mesmos blocos, outro código
   if (placa === 'microbit' && typeof blocosMbReconfigurar === 'function') blocosMbReconfigurar({ visao: null, paleta: null });   // a linguagem do curso pode ter mudado
   if (typeof mbAtivar === 'function') mbAtivar(placa === 'microbit');
   if (typeof k10WebAtivar === 'function') k10WebAtivar(typeof k10Navegador === 'function' && k10Navegador());   // depois do LEGO e da micro:bit, que também mexem na barra

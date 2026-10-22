@@ -24,6 +24,17 @@ junto. Detalhes, limites e testes: `LEIA-ME.md` §14 e `ferramentas/web/`.
 
 Detalhes, testes e roteiro do primeiro teste: `LEIA-ME.md` §16.
 
+## Blocos: Livre ou Guiado
+
+Na aba **Blocos** (Arduino Uno, micro:bit e UNIHIKER K10) o aluno escolhe:
+
+- **Livre** — todos os blocos, para criar o próprio programa;
+- **Guiado** — a missão aberta vira um passo a passo: a categoria, o bloco e o lugar onde ele
+  encaixa **piscam**, e depois o campo a ajustar. Bloco no lugar errado pisca em vermelho.
+
+Visual do Scratch/PictoBlox (cores do Scratch e extensões de hardware com ícone). Na K10, os
+mesmos blocos geram C++ e MicroPython. Detalhes: `LEIA-ME.md` §17.
+
 ## 🎮 Joystick: o Arduino vira controle de jogo do PC
 
 Na aba **🎮 Joystick** (Arduino Uno) o aluno adiciona quantos sensores quiser — **push button**,

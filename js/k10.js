@@ -534,6 +534,43 @@ function explicarLinhaK10(linha, linguagem) {
   if (/rgb.*write/.test(l)) return 'Define a cor do LED indicado. O valor 0x000000 apaga; sem índice no MicroPython ou -1 no C++ seleciona todos.';
   if (/rgb.clear/.test(l)) return 'Apaga os três LEDs RGB.';
   if (/button\(button\./.test(l)) return 'Cria uma referência ao botão integrado para consultar seu estado.';
+  if (/^(} else if|elif |if )/.test(l)) return 'Testa a condição e executa este bloco quando ela é verdadeira.';
+  if (/^(#|\/\/)\s/.test(l)) return 'Comentário: um recado para quem lê o programa. A placa ignora esta linha.';
+  if (/^def /.test(l)) return 'Cria uma função auxiliar: um pequeno comando com nome, usado mais abaixo no programa.';
+  if (/^return\b/.test(l)) return 'Devolve o resultado da função para quem a chamou.';
+  if (/^for .* in wifi\.scan|^for \(int i = 0; i < redes/.test(l)) return 'Repete uma vez para cada rede Wi‑Fi encontrada.';
+  if (/^for /.test(l)) return 'Repete as instruções de dentro o número de vezes indicado.';
+  if (/^while \(clima\.begin/.test(l)) return 'Tenta ligar o sensor de clima (AHT20) até ele responder.';
+  if (/DFRobot_AHT20 clima/.test(l)) return 'Cria o objeto clima, que lê o sensor de temperatura e umidade AHT20.';
+  if (/startMeasurementReady/.test(l)) return 'Pede ao sensor AHT20 uma medição nova de temperatura e umidade.';
+  if (/getTemperature_C|read_temp/.test(l)) return 'Lê a temperatura em °C do sensor AHT20 e guarda na variável.';
+  if (/getHumidity_RH|read_humi/.test(l)) return 'Lê a umidade do ar (%) do sensor AHT20 e guarda na variável.';
+  if (/readALS|light\.read/.test(l)) return 'Lê o sensor de luz ambiente: quanto mais claro, maior o número.';
+  if (/getAccelerometer[XYZ]|acce\.read_[xyz]/.test(l)) return 'Lê a inclinação da placa pelo acelerômetro e usa o valor no cálculo.';
+  if (/getStrength|forca_movimento\(\)/.test(l)) return 'Lê a força do movimento (o tamanho da aceleração) para perceber sacudidas.';
+  if (/readMICData|nivel_microfone\(\)/.test(l)) return 'Lê o volume do som captado pelo microfone.';
+  if (/^Music music/.test(l)) return 'Cria o objeto music, que toca sons no alto-falante e grava áudio.';
+  if (/playTone|tocar_tom\(/.test(l)) return 'Toca um tom: a frequência (em Hz) e a duração.';
+  if (/recordSaveToTFCard|recode_tf/.test(l)) return 'Grava alguns segundos de áudio do microfone num arquivo do cartão microSD.';
+  if (/playTFCardAudio|play_tf_music/.test(l)) return 'Toca no alto-falante o arquivo de áudio guardado no cartão microSD.';
+  if (/initSDFile|TF_card\(\)/.test(l)) return 'Prepara o cartão microSD para ler e gravar arquivos.';
+  if (/photoSaveToTFCard|salvar_foto\(/.test(l)) return 'Tira uma foto com a câmera e salva no cartão microSD.';
+  if (/canvasDrawImage|mostrar_imagem\(/.test(l)) return 'Mostra na tela uma imagem guardada no cartão microSD.';
+  if (/initBgCamerImage|Camera\(\)|camera\.init/.test(l)) return 'Liga a câmera da placa.';
+  if (/setBgCamerImage|show_camera/.test(l)) return 'Mostra a imagem da câmera ao vivo no fundo da tela.';
+  if (/canvasDrawCode|draw_qr_code/.test(l)) return 'Desenha na tela um QR Code com o texto ou endereço indicado.';
+  if (/canvasPoint|draw_point/.test(l)) return 'Desenha um ponto na posição x, y com a cor escolhida.';
+  if (/canvasLine|draw_line/.test(l)) return 'Desenha uma linha reta entre dois pontos.';
+  if (/canvasCircle|draw_circle/.test(l)) return 'Desenha um círculo: centro x, y, raio e cor (cheio ou só o contorno).';
+  if (/canvasRectangle|draw_rect/.test(l)) return 'Desenha um retângulo: canto x, y, largura, altura e cor (cheio ou só o contorno).';
+  if (/WiFi\.mode|network\.WLAN|wifi\.active/.test(l)) return 'Liga o Wi‑Fi da placa no modo estação (para entrar numa rede).';
+  if (/WiFi\.disconnect|wifi\.disconnect/.test(l)) return 'Desconecta de qualquer rede antes de procurar as redes por perto.';
+  if (/scanNetworks|wifi\.scan/.test(l)) return 'Procura as redes Wi‑Fi por perto e conta quantas encontrou.';
+  if (/WiFi\.begin|wifi\.connect/.test(l)) return 'Entra na rede Wi‑Fi com o nome e a senha. Troque pelos da sua escola.';
+  if (/const char\* (ssid|senha)/.test(l)) return 'Guarda o nome (ou a senha) da rede Wi‑Fi. Troque pelos da sua escola.';
+  if (/^servo\(|servoGrau\(/.test(l)) return 'Envia ao servo o ângulo desejado.';
+  if (/max\(.*min\(/.test(l)) return 'Limita um valor para não ultrapassar a faixa permitida.';
+  if (/mapear\(/.test(l)) return 'Converte um valor de uma faixa (como a luz) para outra faixa (como o ângulo do servo).';
   if (/^} else if|^elif|^if /.test(l)) return 'Testa a condição e executa este bloco quando ela é verdadeira.';
   if (/else/.test(l)) return 'Executa esta alternativa quando a condição anterior não é atendida.';
   if (/delay\(|time.sleep/.test(l)) return linguagem === 'cpp' ? 'Espera o intervalo em milissegundos antes de continuar.' : 'Espera o intervalo em segundos antes de continuar.';
@@ -550,14 +587,20 @@ function explicarLinhaK10(linha, linguagem) {
   if (/map\(/.test(l)) return 'Converte um valor de uma faixa (como a luz) para outra faixa (como o ângulo do servo).';
   if (/constrain\(/.test(l)) return 'Limita um valor para não ultrapassar a faixa permitida.';
   if (/^}$/.test(l)) return 'Fecha o bloco de instruções.';
-  return 'Guarda um texto na variável para usá-lo na exibição. Altere o valor e observe o resultado.';
+  if (/^(Wire\.|pca|uint8_t|float prescale|prescale|long (us|valor))/.test(l)) return 'Faz parte da conversa com o driver de motores PCA9685 (I2C e PWM).';
+  if (/\+= |-= |\+\+;$|^(\w+) = \1 [+\-*\/] /.test(l)) return 'Muda o valor da variável a partir do valor que ela já tinha.';
+  if (/^(int|long|float|String|uint32_t|uint64_t|bool)\s+\w+\s*=|^\w+\s*=/.test(l)) {
+    if (/"/.test(l)) return 'Guarda um texto na variável para usá-lo na exibição. Altere o valor e observe o resultado.';
+    return 'Guarda um valor numa variável para usar mais adiante.';
+  }
+  return 'Executa este comando da K10.';
 }
 
 function criarCursoK10(linguagem) {
   return K10_ATIVIDADES.map((a, i) => {
     const modulo = K10_MODULOS[Math.floor(i / 5)] || K10_MODULOS[K10_MODULOS.length - 1];
     const solucao = a[linguagem];
-    const icone = { img: modulo.icone };
+    const icone = { img: modulo.icone };   // a.blocos: gabarito do modo Guiado da aba Blocos (k10_fases_gerado.js)
     return {
       id: `k10_${i + 1}`, setor: modulo.id, nome: a.nome, missao: `Missão ${i % 5 + 1}`, xp: i % 5 === 4 ? 30 : 20,
       iconeSetor: modulo.icone, iconeObjetivo: icone, iconeDica: 'icone_void_setup.png', kit: [],
@@ -565,6 +608,7 @@ function criarCursoK10(linguagem) {
       conceito: { titulo: a.nome, imagem: 'boards/k10.jpg', texto: [a.conceito, '**Na placa:** ' + a.resultado] },
       secoes: [{ titulo: linguagem === 'cpp' ? 'C++ · Arduino' : 'MicroPython · atenção à indentação', linhas: solucao.trimEnd().split('\n').filter(l => l.trim()).map(codigo => ({ codigo, explicacao: explicarLinhaK10(codigo, linguagem), icone })) }],
       solucao, starter: linguagem === 'cpp' ? k10Cpp('') : '# Escreva seu programa MicroPython aqui.\n',
+      blocos: a.blocos || null,
     };
   });
 }

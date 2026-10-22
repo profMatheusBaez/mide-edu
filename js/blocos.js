@@ -48,6 +48,22 @@ const PERFIS_BLOCOS = {
     gerar: (ws) => blocosGerarSketch(ws),
     realce: (codigo) => (typeof realcar === 'function' ? realcar(codigo) : codigo),
   },
+  /* UNIHIKER K10: os mesmos blocos geram o C++ e o MicroPython; vale a linguagem do curso. */
+  k10: {
+    rotulo: () => 'Código gerado (' + (blocosLinguagemK10() === 'micropython' ? 'MicroPython' : 'C++') + ')',
+    toolboxCompleta: () => blocosMontarToolboxK10(),
+    toolbox: () => guiaFiltrarToolbox(blocosMontarToolboxK10(), guiaPaleta(), { UNO_VARIAVEIS: ['variables_set', 'variables_get', 'variaveis_somar'] }),
+    itensCustom: (nome) => (nome === 'UNO_VARIAVEIS' ? [
+      { kind: 'block', type: 'variables_set', inputs: { VALUE: _num(0) } },
+      { kind: 'block', type: 'variables_set', inputs: { VALUE: _txt('texto') } },
+      { kind: 'block', type: 'variaveis_somar', inputs: { VALOR: _num(1) } },
+      { kind: 'block', type: 'variables_get' },
+    ] : []),
+    gerar: (ws) => (blocosLinguagemK10() === 'micropython' ? blocosGerarK10Py(ws) : blocosGerarK10Cpp(ws)),
+    realce: (codigo) => (blocosLinguagemK10() === 'micropython'
+      ? (typeof realcarPython === 'function' ? realcarPython(codigo) : codigo)
+      : (typeof realcar === 'function' ? realcar(codigo) : codigo)),
+  },
   lego: {
     rotulo: 'Código gerado (Python)',
     toolbox: () => blocosMontarToolboxLego(),
@@ -80,6 +96,14 @@ function blocosLinguagemMb() {
   return (typeof estado !== 'undefined' && estado.linguagem === 'micropython') ? 'micropython' : 'js';
 }
 
+const blocosLinguagemK10 = () => (typeof estado !== 'undefined' && estado.linguagem === 'micropython' ? 'micropython' : 'cpp');
+
+/* A linguagem do curso mudou sem trocar de placa (K10: C++ ↔ MicroPython): regera o código. */
+function blocosLinguagemMudou() {
+  blocosAtualizarRotulo();
+  blocosAtualizarCodigo();
+}
+
 /* Tema do workspace: o do perfil, se ele tiver um; senão o do Scratch. */
 function blocosTemaAtual() {
   const escuro = document.documentElement.getAttribute('data-tema') === 'escuro';
@@ -94,7 +118,7 @@ const estadoBlocos = {
   temporizadorCodigo: null,
   temporizadorRascunho: null,
   ultimoCodigo: '',
-  perfil: 'uno',        // 'uno' | 'lego' | 'microbit' — ver PERFIS_BLOCOS
+  perfil: 'uno',        // 'uno' | 'lego' | 'microbit' | 'k10' — ver PERFIS_BLOCOS
   faseMb: null,         // micro:bit: id da missão aberta (o rascunho de blocos é por missão)
   visaoMb: null,        // micro:bit: null (linguagem do curso) | 'js' | 'micropython' (só ler)
   paletaMb: null,       // micro:bit: Set de tipos liberados pela fase (null = todos)
