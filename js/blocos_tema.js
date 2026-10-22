@@ -23,6 +23,13 @@ const BLOCOS_CORES = {
   listas:      ['#FF661A', '#FF5500', '#E64D00'],
   meusBlocos:  ['#FF6680', '#FF4D6A', '#FF3355'],
   hardware:    ['#0FBD8C', '#0DA57A', '#0B8E69'],
+  /* Extensões de hardware como no PictoBlox (cores medidas nas telas do PictoBlox):
+     cada categoria de extensão tem a sua cor e um ícone (blocos_aparencia.js). */
+  ext_placa:       ['#0FBD8C', '#0DA57A', '#0B8E69'],
+  ext_atuadores:   ['#5FBC2E', '#52A827', '#47A413'],
+  ext_sensores:    ['#5CB1D6', '#4CA4C3', '#2E8EB8'],
+  ext_display:     ['#F75252', '#E84848', '#D63C3C'],
+  ext_comunicacao: ['#7F461B', '#6A3814', '#5A2F10'],
 };
 
 function blocosMontarBlockStyles() {
@@ -50,14 +57,22 @@ function blocosMontarBlockStyles() {
     lego_remoto_blocks: BLOCOS_CORES.sensores,
     lego_tempo_blocks: BLOCOS_CORES.sensores,
     lego_sensor_blocks: BLOCOS_CORES.sensores,
+    ext_placa_blocks: BLOCOS_CORES.ext_placa,
+    ext_atuadores_blocks: BLOCOS_CORES.ext_atuadores,
+    ext_sensores_blocks: BLOCOS_CORES.ext_sensores,
+    ext_display_blocks: BLOCOS_CORES.ext_display,
+    ext_comunicacao_blocks: BLOCOS_CORES.ext_comunicacao,
   };
+  for (const g of ['ext_placa', 'ext_atuadores', 'ext_sensores', 'ext_display', 'ext_comunicacao', 'controle', 'eventos']) {
+    grupos[g + '_hat_blocks'] = BLOCOS_CORES[g];
+  }
   for (const nome in grupos) {
     const [primaria, secundaria, terciaria] = grupos[nome];
     estilos[nome] = {
       colourPrimary: primaria,
       colourSecondary: secundaria,
       colourTertiary: terciaria,
-      hat: nome === 'eventos_blocks' ? 'cap' : '',
+      hat: nome === 'eventos_blocks' || /_hat_blocks$/.test(nome) ? 'cap' : '',
     };
   }
   return estilos;
@@ -74,6 +89,8 @@ function blocosMontarCategoryStyles() {
     lego_motores: BLOCOS_CORES.hardware, lego_hub: BLOCOS_CORES.aparencia,
     lego_remoto: BLOCOS_CORES.sensores, lego_tempo: BLOCOS_CORES.sensores,
     lego_sensor: BLOCOS_CORES.sensores,
+    ext_placa: BLOCOS_CORES.ext_placa, ext_atuadores: BLOCOS_CORES.ext_atuadores, ext_sensores: BLOCOS_CORES.ext_sensores,
+    ext_display: BLOCOS_CORES.ext_display, ext_comunicacao: BLOCOS_CORES.ext_comunicacao,
   };
   for (const nome in grupos) estilos[nome + '_category'] = { colour: grupos[nome][0] };
   return estilos;

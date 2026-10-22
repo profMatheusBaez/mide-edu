@@ -7,7 +7,7 @@
 <link rel="stylesheet" href="css/estilo.css?v=web1">
 <link rel="stylesheet" href="css/academy.css?v=joy4">
 <link rel="stylesheet" href="css/boards.css?v=k10w1">
-<link rel="stylesheet" href="css/blocos.css?v=web1">
+<link rel="stylesheet" href="css/blocos.css?v=guia1">
 <link rel="stylesheet" href="css/lego.css?v=web1">
 <link rel="stylesheet" href="css/microbit.css?v=web1">
 <link rel="stylesheet" href="css/joystick.css?v=joy7">
@@ -165,6 +165,18 @@
 
           <!-- Modo blocos: toolbox+canvas Blockly (à esquerda) + código gerado -->
           <div id="area-blocos" hidden>
+            <div id="guia-barra" hidden>
+              <div class="guia-modo" role="group" aria-label="Modo dos blocos">
+                <button type="button" data-guia-modo="guiado" aria-pressed="true" title="A missão aberta, passo a passo: o bloco certo pisca">Guiado</button>
+                <button type="button" data-guia-modo="livre" aria-pressed="false" title="Todos os blocos, programa livre">Livre</button>
+              </div>
+              <div id="guia-instrucao" class="guia-instrucao" role="status" aria-live="polite">
+                <span id="guia-missao" class="guia-missao"></span>
+                <b id="guia-titulo"></b> <span id="guia-texto"></span>
+              </div>
+              <span id="guia-desenho" class="guia-desenho" hidden aria-label="Desenho pedido"></span>
+              <button type="button" id="guia-recomecar" class="guia-recomecar" hidden title="Apagar os blocos e começar a missão de novo">↺ Recomeçar</button>
+            </div>
             <div id="blocos-workspace-wrap">
               <div id="blocos-workspace"></div>
             </div>
@@ -451,19 +463,22 @@
   <div class="joy-dlg-pe"><button type="button" class="joy-bt" id="bt-joy-tecla-cancelar">Cancelar</button></div>
 </dialog>
 <script src="js/dados.js?v=web1"></script>
+<script src="js/blocos_fases_uno.js?v=guia1"></script>
 <script src="js/k10.js?v=web1"></script>
-<script src="js/ide.js?v=k10w1"></script>
+<script src="js/ide.js?v=guia1"></script>
 <script src="js/monitor.js?v=k10w1"></script>
 <script src="js/barra.js?v=web1"></script>
 
 <!-- Modo Blocos — Blockly 13.3.0 vendorizado, sem CDN -->
 <script src="js/vendor/blockly/blockly.min.js?v=web1"></script>
 <script src="js/vendor/blockly/pt-br.js?v=web1"></script>
-<script src="js/blocos_tema.js?v=web1"></script>
-<script src="js/blocos_defs.js?v=web1"></script>
-<script src="js/blocos_toolbox.js?v=web1"></script>
-<script src="js/blocos_gen.js?v=web1"></script>
-<script src="js/blocos.js?v=web1"></script>
+<script src="js/blocos_tema.js?v=guia1"></script>
+<script src="js/blocos_aparencia.js?v=guia1"></script>
+<script src="js/blocos_defs.js?v=guia1"></script>
+<script src="js/blocos_toolbox.js?v=guia1"></script>
+<script src="js/blocos_gen.js?v=guia1"></script>
+<script src="js/blocos_guia.js?v=guia1"></script>
+<script src="js/blocos.js?v=guia1"></script>
 
 <!-- Placa LEGO Technic (Pybricks): compilador .py→.mpy (WebAssembly, MIT), protocolo BLE, blocos e exemplos -->
 <script src="js/vendor/pybricks/mpy-cross-v6.js?v=web1"></script>
@@ -471,7 +486,7 @@
 <script src="js/pybricks_ble.js?v=web1"></script>
 <script src="js/blocos_lego_defs.js?v=web1"></script>
 <script src="js/blocos_lego_toolbox.js?v=web1"></script>
-<script src="js/blocos_lego_gen.js?v=web1"></script>
+<script src="js/blocos_lego_gen.js?v=guia1"></script>
 <script src="js/lego_exemplos.js?v=web1"></script>
 <script src="js/lego.js?v=web1"></script>
 
@@ -480,12 +495,12 @@
 <script src="js/vendor/microbit/microbit-connection.js?v=web1"></script>
 <script src="js/vendor/microbit/microbit-fs.js?v=web1"></script>
 <script src="js/vendor/makecode/makecode-compiler.js?v=web1"></script>
-<script src="js/blocos_mb_spec.js?v=web1"></script>
-<script src="js/blocos_mb_defs.js?v=web1"></script>
-<script src="js/blocos_mb_toolbox.js?v=web1"></script>
+<script src="js/blocos_mb_spec.js?v=guia1"></script>
+<script src="js/blocos_mb_defs.js?v=guia1"></script>
+<script src="js/blocos_mb_toolbox.js?v=guia1"></script>
 <script src="js/blocos_mb_gen_js.js?v=web1"></script>
 <script src="js/blocos_mb_gen_py.js?v=web1"></script>
-<script src="js/blocos_mb_tema.js?v=web1"></script>
+<script src="js/blocos_mb_tema.js?v=guia1"></script>
 <script src="js/microbit_suporte.js?v=web1"></script>
 <script src="js/microbit_hex.js?v=web1"></script>
 <script src="js/microbit_usb.js?v=web1"></script>
@@ -494,16 +509,16 @@
 <script src="js/microbit_exemplos.js?v=web1"></script>
 <script src="js/microbit_curso.js?v=web1"></script>
 <script src="js/microbit_fases_gerado.js?v=web1"></script>
-<script src="js/microbit.js?v=web1"></script>
+<script src="js/microbit.js?v=guia1"></script>
 
 <!-- UNIHIKER K10 em MicroPython pela USB do navegador (Web Serial) + instalador do firmware -->
 <script src="js/vendor/esptool/esptool.js?v=k10w1"></script>
 <script src="js/k10_mp.js?v=k10w1"></script>
 <script src="js/k10_firmware.js?v=k10w1"></script>
-<script src="js/k10_web.js?v=k10w1"></script>
+<script src="js/k10_web.js?v=guia1"></script>
 <script src="js/menus.js?v=web1"></script>
 <script src="js/academy.js?v=web1"></script>
-<script src="js/boards.js?v=k10w1"></script>
+<script src="js/boards.js?v=guia1"></script>
 <script src="js/joystick_gen.js?v=joy8"></script>
 <script src="js/joystick_app.js?v=joy7"></script>
 <script src="js/joystick.js?v=joy8"></script>

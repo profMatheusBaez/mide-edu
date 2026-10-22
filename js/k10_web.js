@@ -203,6 +203,7 @@ async function k10WebExecutar(enviar) {
   if (ok && enviar) {
     if (estado.aba === 'treino' && estado.treino?.idx >= estado.treino?.linhas.length) concluirFase();
     else if (estado.aba === 'completo') oferecerConfirmacaoK10();
+    else if (estado.aba === 'blocos' && typeof blocosGuiaConcluiu === 'function' && blocosGuiaConcluiu()) blocosGuiaConcluirMissao();
   }
 }
 

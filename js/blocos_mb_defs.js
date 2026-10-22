@@ -97,10 +97,12 @@ function mbDefinicaoBlockly(b) {
     def.message1 = '%1';
     def.args1 = [{ type: 'input_statement', name: 'DO' }];
   }
+  const grupo = mbGrupoScratch(b);   // cor do Scratch / extensão do PictoBlox
+  if (/^ext_/.test(grupo)) def.extensions = ['icone_' + grupo + '_microbit'];
   if (b.forma === 'evento') {
-    def.style = 'mb_' + b.cat + '_hat_blocks';
+    def.style = grupo + '_hat_blocks';
   } else {
-    def.style = 'mb_' + b.cat + '_blocks';
+    def.style = grupo + '_blocks';
     if (b.forma === 'valor') def.output = b.saida || null;
     else { def.previousStatement = null; def.nextStatement = null; }
   }
@@ -113,7 +115,7 @@ const BLOCOS_MB_DEFINICOES = MB_BLOCOS.map(mbDefinicaoBlockly).concat([
     message0: 'definir %1 para %2',
     args0: [{ type: 'field_variable', name: 'VAR', variable: 'item' }, { type: 'input_value', name: 'VALOR' }],
     previousStatement: null, nextStatement: null, inputsInline: true,
-    style: 'mb_variaveis_blocks',
+    style: 'variaveis_blocks',
     tooltip: 'Guarda um valor na variável.',
   },
   {
@@ -121,7 +123,7 @@ const BLOCOS_MB_DEFINICOES = MB_BLOCOS.map(mbDefinicaoBlockly).concat([
     message0: 'mudar %1 por %2',
     args0: [{ type: 'field_variable', name: 'VAR', variable: 'item' }, { type: 'input_value', name: 'VALOR', check: 'Number' }],
     previousStatement: null, nextStatement: null, inputsInline: true,
-    style: 'mb_variaveis_blocks',
+    style: 'variaveis_blocks',
     tooltip: 'Soma esse valor à variável (use um número negativo para subtrair).',
   },
 ]);

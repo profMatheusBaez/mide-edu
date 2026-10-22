@@ -21,7 +21,6 @@ const MB = {
   ativo: false,
   conectando: false,
   conectandoBle: false,
-  paletaLivre: false,   // false = a toolbox dos Blocos mostra só os blocos da missão; true = todos
 };
 
 const mbUSB = () => (typeof MicrobitUSB !== 'undefined' ? MicrobitUSB : null);
@@ -373,6 +372,7 @@ function mbMostrarErros(r) {
 function mbTentarConcluirPorBlocos(codigo) {
   const fase = estado.fase;
   if (!fase || estado.aba !== 'blocos') return;
+  if (typeof blocosGuiaConcluiu === 'function' && blocosGuiaConcluiu()) { blocosGuiaConcluirMissao(); return; }
   if (mbNormalizarCodigo(codigo) === mbNormalizarCodigo(fase.solucao)) {
     if (progresso.feitas[fase.id]) {
       registrarModoConcluido(fase, 'blocos');
@@ -754,23 +754,11 @@ function mbPaletaDaFase(fase) {
   return tipos;
 }
 
-function mbAoAbrirFase(fase) {
-  if (typeof estadoBlocos === 'undefined' || !MB.ativo) return;
-  blocosSalvarRascunho();   // com a chave da missão que estava aberta
-  estadoBlocos.faseMb = fase ? fase.id : null;
-  const paleta = fase && fase.blocos && !MB.paletaLivre ? mbPaletaDaFase(fase) : null;
-  blocosMbReconfigurar({ paleta });
-  if (estadoBlocos.workspace) { blocosCarregarRascunho(); blocosAtualizarCodigo(); }
-  mbAtualizarBotaoPaleta();
-}
-
+/* Os blocos da missão (paleta e rascunho por missão) agora são o modo Guiado de blocos_guia.js;
+   o modo Livre tem todos os blocos e um rascunho só. */
 function mbAtualizarBotaoPaleta() {
   const linha = document.getElementById('mb-paleta-linha');
-  if (!linha) return;
-  linha.hidden = !(MB.ativo && estadoBlocos.perfil === 'microbit');
-  const bt = document.getElementById('bt-mb-paleta');
-  bt.setAttribute('aria-pressed', String(!MB.paletaLivre));
-  bt.textContent = MB.paletaLivre ? 'Todos os blocos (clique para só os da missão)' : 'Só os blocos da missão (clique para ver todos)';
+  if (linha) linha.hidden = true;
 }
 
 /* Mensagens ao entrar na placa (depois de abrir a primeira missão). */
@@ -840,11 +828,6 @@ document.addEventListener('DOMContentLoaded', () => {
     blocosMbReconfigurar({ visao: b.dataset.visao === doCurso ? null : b.dataset.visao });
   });
 
-  const btPaleta = document.getElementById('bt-mb-paleta');
-  if (btPaleta) btPaleta.addEventListener('click', () => {
-    MB.paletaLivre = !MB.paletaLivre;
-    mbAoAbrirFase(estado.fase);
-  });
 
   const aviso = document.getElementById('mb-card-aviso');
   if (aviso) aviso.hidden = mbSuportado();

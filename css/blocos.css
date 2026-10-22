@@ -42,20 +42,35 @@
   padding-top: 8px;
   font-family: var(--ui);
 }
-#blocos-workspace .blocklyTreeRow {
-  height: auto !important;
-  padding: 8px 10px !important;
-  margin: 2px 6px;
-  border-radius: 8px;
+/* Coluna de categorias do Scratch / PictoBlox (blocos_aparencia.js): círculo colorido — ou o
+   ícone da extensão — com o nome embaixo; a categoria aberta fica com fundo cinza-claro. */
+#blocos-workspace .blocklyToolboxCategoryContainer { margin: 0; }
+#blocos-workspace .blocklyToolboxCategory {
+  height: auto !important; line-height: 1.15;
+  margin: 0 !important; padding: 7px 2px 6px !important;
+  border: 0 !important; border-radius: 0;
+  cursor: pointer; white-space: normal;
 }
-#blocos-workspace .blocklyTreeLabel {
-  font-family: var(--ui) !important;
-  font-size: 12px !important;
-  font-weight: 600;
+#blocos-workspace .blocklyToolboxCategory .blocklyTreeRowContentContainer {
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
 }
-#blocos-workspace .blocklyTreeSelected {
-  background-color: var(--hover) !important;
+#blocos-workspace .cat-icone { visibility: visible !important; flex: none; background-image: none !important; }
+#blocos-workspace .cat-circulo {
+  width: 20px !important; height: 20px !important; border-radius: 50%;
+  background: var(--cat-cor, #ccc); border: 1px solid rgba(0, 0, 0, .18);
 }
+#blocos-workspace .cat-icone-img { width: 24px !important; height: 24px !important; }
+#blocos-workspace .blocklyToolboxCategoryLabel {
+  font-family: var(--ui) !important; font-size: 10.5px !important; font-weight: 500;
+  color: var(--txt) !important; padding: 0 2px; text-align: center;
+  max-width: 76px; word-break: keep-all; overflow-wrap: normal; hyphens: none;
+}
+#blocos-workspace .blocklyToolboxCategory:not(.blocklyToolboxSelected):hover { background-color: var(--hover) !important; }
+#blocos-workspace .blocklyToolboxSelected { background-color: var(--painel2) !important; }
+#blocos-workspace .blocklyToolboxSelected .blocklyToolboxCategoryLabel { color: var(--txt) !important; }
+#blocos-workspace .blocklyToolbox { width: 80px; }
+/* nome da categoria no alto do flyout, como no Scratch */
+#blocos-workspace .blocos-flyout-titulo { font-family: var(--ui); font-size: 15px; font-weight: 700; fill: var(--txt) !important; }
 #blocos-workspace .blocklyFlyoutBackground { fill-opacity: 1; }
 
 /* ---------- painel de código gerado ---------- */
@@ -96,3 +111,61 @@
   #blocos-codigo { display: none; }
   #area-blocos { grid-template-columns: 1fr; }
 }
+
+/* ---------- modo Livre / Guiado (blocos_guia.js) ---------- */
+#area-blocos { grid-template-rows: auto minmax(0, 1fr); }
+#guia-barra {
+  grid-column: 1 / -1;
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  padding: 8px 12px;
+  background: var(--painel2);
+  border-bottom: 1px solid var(--borda);
+  font-family: var(--ui); font-size: 13px; color: var(--txt);
+}
+#guia-barra[hidden] { display: none; }
+.guia-modo { display: inline-flex; border: 1px solid var(--borda); border-radius: 9px; overflow: hidden; flex: none; }
+.guia-modo button {
+  border: 0; background: var(--painel); color: var(--txt2);
+  padding: 6px 14px; font: 600 12px var(--ui); cursor: pointer;
+}
+.guia-modo button + button { border-left: 1px solid var(--borda); }
+.guia-modo button[aria-pressed="true"] { background: var(--acento, #00979C); color: #fff; }
+.guia-instrucao { flex: 1 1 280px; min-width: 0; line-height: 1.45; }
+.guia-instrucao b { color: var(--txt); margin-right: 4px; }
+.guia-instrucao.ok b { color: var(--ok); }
+.guia-instrucao.erro b { color: var(--erro, #D93025); }
+.guia-missao { display: block; font-size: 11px; font-weight: 700; letter-spacing: .03em; color: var(--txt2); text-transform: uppercase; }
+.guia-missao:empty { display: none; }
+.guia-recomecar {
+  border: 1px solid var(--borda); background: var(--painel); color: var(--txt);
+  border-radius: 8px; padding: 6px 10px; font: 600 12px var(--ui); cursor: pointer; flex: none;
+}
+.guia-desenho { display: inline-grid; grid-template-columns: repeat(5, 9px); gap: 2px; padding: 4px; border-radius: 6px; background: #111; flex: none; }
+.guia-desenho[hidden] { display: none; }
+.guia-desenho i { width: 9px; height: 9px; border-radius: 2px; background: #3a1010; }
+.guia-desenho i.on { background: #ff3b3b; box-shadow: 0 0 4px #ff3b3b; }
+
+/* o que piscar: categoria da toolbox, bloco do flyout, campo a mudar */
+@keyframes guia-pisca { 0%, 100% { opacity: 1; } 50% { opacity: .25; } }
+@keyframes guia-brilho { 0%, 100% { filter: drop-shadow(0 0 0 rgba(255, 196, 0, 0)); } 50% { filter: drop-shadow(0 0 7px #FFC400) drop-shadow(0 0 3px #FFC400); } }
+@keyframes guia-brilho-erro { 0%, 100% { filter: drop-shadow(0 0 0 rgba(217, 48, 37, 0)); } 50% { filter: drop-shadow(0 0 7px #FF3B30) drop-shadow(0 0 3px #FF3B30); } }
+@keyframes guia-fundo { 0%, 100% { background-color: rgba(255, 196, 0, .15); box-shadow: 0 0 0 2px #FFC400; } 50% { background-color: rgba(255, 196, 0, .7); box-shadow: 0 0 0 4px #FFC400, 0 0 14px #FFC400; } }
+#blocos-workspace .blocklyTreeRow.guia-pisca,
+#blocos-workspace .blocklyToolboxCategory.guia-pisca {
+  border-radius: 8px;
+  animation: guia-fundo 0.9s ease-in-out infinite;
+}
+#blocos-workspace g.guia-pisca { animation: guia-brilho 0.9s ease-in-out infinite; }
+#blocos-workspace g.guia-pisca > .blocklyPath,
+#blocos-workspace g.guia-pisca > .blocklyFieldRect { stroke: #FFC400 !important; stroke-width: 3px; }
+#blocos-workspace g.guia-suave > .blocklyPath { stroke: #FFC400 !important; stroke-width: 2px; }
+#blocos-workspace g.guia-erro { animation: guia-brilho-erro 0.8s ease-in-out infinite; }
+#blocos-workspace g.guia-erro > .blocklyPath { stroke: #FF3B30 !important; stroke-width: 3px; }
+#blocos-workspace rect.guia-alvo {
+  fill: #FFC400; stroke: #fff; stroke-width: 1.5px;
+  animation: guia-pisca 0.9s ease-in-out infinite; pointer-events: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  #blocos-workspace .guia-pisca, #blocos-workspace g.guia-erro, #blocos-workspace rect.guia-alvo { animation: none; }
+}
+@media (max-width: 960px) { #guia-barra { padding: 6px 8px; gap: 8px; font-size: 12px; } }

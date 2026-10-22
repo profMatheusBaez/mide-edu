@@ -1,7 +1,6 @@
 // Gerado pelo Modo Blocos — MIDE EDU
 #define NOTA_DO 262
 
-const int PINOS_7SEG[7] = {2, 3, 4, 5, 6, 7, 8};
 const int DIGITOS_7SEG[10][7] = {
   {1, 1, 1, 1, 1, 1, 0},
   {0, 1, 1, 0, 0, 0, 0},
@@ -14,6 +13,7 @@ const int DIGITOS_7SEG[10][7] = {
   {1, 1, 1, 1, 1, 1, 1},
   {1, 1, 1, 1, 0, 1, 1}
 };
+const int PINOS_7SEG[7] = {2, 3, 4, 5, 6, 7, 8};
 int cm = 0;
 
 void mostrarDigito(int n) {
@@ -28,7 +28,7 @@ long distanciaCM(int trig, int echo) {
   digitalWrite(trig, HIGH);
   delayMicroseconds(10);
   digitalWrite(trig, LOW);
-  long duracao = pulseIn(echo, HIGH);
+  long duracao = pulseIn(echo, HIGH, 30000);
   return duracao / 29 / 2;
 }
 

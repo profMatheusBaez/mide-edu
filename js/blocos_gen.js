@@ -123,18 +123,30 @@ geradorArduino.registrarFuncaoDistancia = function () {
     '  digitalWrite(trig, HIGH);\n' +
     '  delayMicroseconds(10);\n' +
     '  digitalWrite(trig, LOW);\n' +
-    '  long duracao = pulseIn(echo, HIGH);\n' +
+    '  long duracao = pulseIn(echo, HIGH, 30000);\n' +
     '  return duracao / 29 / 2;\n' +
     '}');
 };
 
-geradorArduino.registrarFuncaoDigito = function () {
+geradorArduino.registrarFuncaoDigito = function (qual) {
   const linhasTabela = BLOCOS_7SEG_DIGITOS
     .map((d) => '  {' + d.join(', ') + '}')
     .join(',\n');
   this.registrarGlobal('digitosTabela',
-    'const int PINOS_7SEG[7] = {2, 3, 4, 5, 6, 7, 8};\n' +
     'const int DIGITOS_7SEG[10][7] = {\n' + linhasTabela + '\n};');
+  if (qual === 'D2') {
+    /* segundo display (unidades): a..g nos pinos 10, 11, 12, 13, A0, A1, A2; DP no A3 */
+    this.registrarGlobal('pinos7seg2', 'const int PINOS_7SEG2[7] = {10, 11, 12, 13, A0, A1, A2};');
+    this.registrarFuncao('mostrarDigito2',
+      'void mostrarDigito2(int n) {\n' +
+      '  for (int i = 0; i < 7; i++) {\n' +
+      '    digitalWrite(PINOS_7SEG2[i], DIGITOS_7SEG[n][i]);\n' +
+      '  }\n' +
+      '}');
+    for (const p of ['10', '11', '12', '13', 'A0', 'A1', 'A2', 'A3']) this.registrarPinMode(p, 'OUTPUT');
+    return;
+  }
+  this.registrarGlobal('pinos7seg', 'const int PINOS_7SEG[7] = {2, 3, 4, 5, 6, 7, 8};');
   this.registrarFuncao('mostrarDigito',
     'void mostrarDigito(int n) {\n' +
     '  for (int i = 0; i < 7; i++) {\n' +
@@ -213,6 +225,27 @@ geradorArduino.forBlock['operador_igual'] = _binop('==', geradorArduino.ORDER_RE
 geradorArduino.forBlock['operador_e'] = _binop('&&', geradorArduino.ORDER_LOGICAL_AND);
 geradorArduino.forBlock['operador_ou'] = _binop('||', geradorArduino.ORDER_LOGICAL_OR);
 
+geradorArduino.forBlock['operador_maior_igual'] = _binop('>=', geradorArduino.ORDER_RELATIONAL);
+geradorArduino.forBlock['operador_menor_igual'] = _binop('<=', geradorArduino.ORDER_RELATIONAL);
+geradorArduino.forBlock['operador_diferente'] = _binop('!=', geradorArduino.ORDER_RELATIONAL);
+geradorArduino.forBlock['operador_limitar'] = function (block, gen) {
+  const v = gen.valueToCode(block, 'VALOR', gen.ORDER_NONE) || '0';
+  const a = gen.valueToCode(block, 'MIN', gen.ORDER_NONE) || '0';
+  const b = gen.valueToCode(block, 'MAX', gen.ORDER_NONE) || '0';
+  return ['constrain(' + v + ', ' + a + ', ' + b + ')', gen.ORDER_ATOMIC];
+};
+geradorArduino.forBlock['arduino_nivel'] = function (block, gen) {
+  return [block.getFieldValue('NIVEL') === 'LOW' ? 'LOW' : 'HIGH', gen.ORDER_ATOMIC];
+};
+geradorArduino.forBlock['sensores_tempo'] = function (block, gen) { return ['millis()', gen.ORDER_ATOMIC]; };
+geradorArduino.forBlock['atuadores_buzzer_tocar'] = function (block, gen) {
+  const freq = gen.valueToCode(block, 'FREQ', gen.ORDER_NONE) || '0';
+  return 'tone(' + block.getFieldValue('PINO') + ', ' + freq + ');\n';
+};
+geradorArduino.forBlock['display_lcd_continuar'] = function (block, gen) {
+  const texto = gen.valueToCode(block, 'TEXTO', gen.ORDER_NONE) || '""';
+  return 'lcd.print(' + texto + ');\n';
+};
 geradorArduino.forBlock['operador_aleatorio'] = function (block, gen) {
   const de = gen.valueToCode(block, 'DE', gen.ORDER_NONE) || '0';
   const ate = gen.valueToCode(block, 'ATE', gen.ORDER_NONE) || '0';
@@ -381,9 +414,10 @@ geradorArduino.forBlock['display_lcd_escrever'] = function (block, gen) {
 geradorArduino.forBlock['display_lcd_limpar'] = function () { return 'lcd.clear();\n'; };
 
 geradorArduino.forBlock['display_7seg_mostrar'] = function (block, gen) {
-  gen.registrarFuncaoDigito();
+  const qual = block.getFieldValue('QUAL') || 'D1';
+  gen.registrarFuncaoDigito(qual);
   const digito = gen.valueToCode(block, 'DIGITO', gen.ORDER_NONE) || '0';
-  return 'mostrarDigito(' + digito + ');\n';
+  return (qual === 'D2' ? 'mostrarDigito2(' : 'mostrarDigito(') + digito + ');\n';
 };
 geradorArduino.forBlock['display_7seg_apagar'] = function (block, gen) {
   for (const p of [2, 3, 4, 5, 6, 7, 8, 9]) gen.registrarPinMode(String(p), 'OUTPUT');

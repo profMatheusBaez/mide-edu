@@ -26,17 +26,23 @@
  * ============================================================ */
 'use strict';
 
-/* Cores: os blocos que existem no Scratch (Controle, Operadores, Variáveis) seguem a paleta do
-   Scratch; os blocos próprios da micro:bit têm uma cor só, que lembra a placa (corpo preto com
-   detalhes dourados) — o trio de cada uma está em blocos_mb_tema.js. */
-const MB_COR_PLACA = '#2F3E4E';
-const MB_CORES = {
-  basico: MB_COR_PLACA, entrada: MB_COR_PLACA, musica: MB_COR_PLACA, led: MB_COR_PLACA, radio: MB_COR_PLACA,
-  pinos: MB_COR_PLACA, serial: MB_COR_PLACA, componentes: MB_COR_PLACA, jogo: MB_COR_PLACA, bluetooth: MB_COR_PLACA,
-  lacos: '#FFAB19', logica: '#59C059', matematica: '#59C059', texto: '#59C059', variaveis: '#FF8C1A',
+/* Cores como no Scratch 3 / PictoBlox: Laços, Lógica, Matemática, Texto e Variáveis com as cores
+   do Scratch; o que é da placa vira EXTENSÃO, como no PictoBlox (cor da extensão + ícone à
+   esquerda do bloco): placa, Sensores, Atuadores, Display e Comunicação (blocos_tema.js,
+   blocos_aparencia.js). "sempre" e as pausas ficam em Controle, como no Scratch. */
+const MB_CAT_SCRATCH = {
+  basico: 'ext_placa', entrada: 'ext_sensores', musica: 'ext_atuadores', led: 'ext_display', radio: 'ext_comunicacao',
+  lacos: 'controle', logica: 'operadores', matematica: 'operadores', texto: 'operadores', variaveis: 'variaveis',
+  pinos: 'ext_placa', serial: 'ext_comunicacao', componentes: 'ext_display', jogo: 'ext_display', bluetooth: 'ext_comunicacao',
 };
+const MB_CONTROLE = new Set(['mb_sempre', 'mb_pausa', 'mb_esperar_us', 'mb_musica_pausa', 'mb_para', 'mb_enquanto']);
+const MB_GRUPO_BLOCO = { mb_distancia_cm: 'ext_sensores', mb_servo: 'ext_atuadores', mb_ler_digital: 'ext_placa', mb_tempo: 'ext_placa' };
+/* Grupo de cor (BLOCOS_CORES, blocos_tema.js) de um bloco da tabela. */
+function mbGrupoScratch(b) {
+  if (MB_CONTROLE.has(b.id)) return 'controle';
+  return MB_GRUPO_BLOCO[b.id] || MB_CAT_SCRATCH[b.cat] || 'ext_placa';
+}
 
-/* Ordem em que aparecem na toolbox. `so` = só JavaScript. */
 const MB_CATEGORIAS = [
   { id: 'basico', rotulo: 'Básico' },
   { id: 'entrada', rotulo: 'Entrada' },

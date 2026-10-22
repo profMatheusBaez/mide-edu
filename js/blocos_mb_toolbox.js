@@ -59,7 +59,7 @@ const MB_NATIVOS_TOOLBOX = {
 
 /* Categoria "Variáveis": os blocos dependem das variáveis que existem. */
 function mbFlyoutVariaveis(ws) {
-  const itens = [{ kind: 'button', text: 'Criar uma variável…', callbackKey: 'blocosCriarVariavel' }];
+  const itens = [{ kind: 'label', text: 'Variáveis', 'web-class': 'blocos-flyout-titulo' }, { kind: 'button', text: 'Criar uma variável…', callbackKey: 'blocosCriarVariavel' }];
   const vars = ws.getVariableMap().getAllVariables();
   if (vars.length) {
     const id = vars[0].getId();
@@ -90,12 +90,16 @@ function blocosMontarToolboxMB(opcoes) {
     }
     if (!itens.length) continue;
     const soJs = cat.so === 'js' && py;
-    contents.push({
+    const grupo = MB_CAT_SCRATCH[cat.id];
+    const cat2 = {
       kind: 'category',
       name: soJs ? cat.rotulo + ' (só JS)' : cat.rotulo,
       categorystyle: soJs ? 'mb_desativado_category' : 'mb_' + cat.id + '_category',
       contents: itens,
-    });
+    };
+    /* extensão do PictoBlox: ícone no lugar do círculo colorido */
+    if (/^ext_/.test(grupo) && typeof blocosIconeDoGrupo === 'function') cat2.icone = blocosIconeDoGrupo(grupo, 'microbit', true);
+    contents.push(cat2);
   }
   return { kind: 'categoryToolbox', contents };
 }

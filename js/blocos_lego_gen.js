@@ -236,6 +236,15 @@ geradorPybricks.forBlock['operador_resto'] = _binopPy('%', geradorPybricks.ORDER
 geradorPybricks.forBlock['operador_maior'] = _binopPy('>', geradorPybricks.ORDER_RELATIONAL);
 geradorPybricks.forBlock['operador_menor'] = _binopPy('<', geradorPybricks.ORDER_RELATIONAL);
 geradorPybricks.forBlock['operador_igual'] = _binopPy('==', geradorPybricks.ORDER_RELATIONAL);
+geradorPybricks.forBlock['operador_maior_igual'] = _binopPy('>=', geradorPybricks.ORDER_RELATIONAL);
+geradorPybricks.forBlock['operador_menor_igual'] = _binopPy('<=', geradorPybricks.ORDER_RELATIONAL);
+geradorPybricks.forBlock['operador_diferente'] = _binopPy('!=', geradorPybricks.ORDER_RELATIONAL);
+geradorPybricks.forBlock['operador_limitar'] = function (block, gen) {
+  const v = gen.valueToCode(block, 'VALOR', gen.ORDER_NONE) || '0';
+  const a = gen.valueToCode(block, 'MIN', gen.ORDER_NONE) || '0';
+  const b = gen.valueToCode(block, 'MAX', gen.ORDER_NONE) || '0';
+  return ['min(max(' + v + ', ' + a + '), ' + b + ')', gen.ORDER_ATOMIC];
+};
 geradorPybricks.forBlock['operador_e'] = _binopPy('and', geradorPybricks.ORDER_LOGICAL_AND);
 geradorPybricks.forBlock['operador_ou'] = _binopPy('or', geradorPybricks.ORDER_LOGICAL_OR);
 

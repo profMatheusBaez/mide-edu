@@ -31,6 +31,7 @@ const BLOCOS_PINOS_DIGITAIS = [
   ['6 (trig)', '6'],
   ['7 (echo)', '7'],
   ['0', '0'], ['1', '1'], ['4', '4'], ['8', '8'], ['9', '9'], ['13', '13'],
+  ['A0', 'A0'], ['A1', 'A1'], ['A2', 'A2'], ['A3', 'A3'], ['A4', 'A4'], ['A5', 'A5'],
 ];
 
 const BLOCOS_PINOS_PWM = [
@@ -441,5 +442,92 @@ const BLOCOS_DEFINICOES = [
     style: 'sensores_blocks', inputsInline: true,
   },
 ];
+
+/* ------------------------------------------------------------
+ * Blocos acrescentados para as 40 missões em blocos (modo Guiado):
+ * o que as missões em texto usam e o catálogo ainda não tinha.
+ * ---------------------------------------------------------- */
+BLOCOS_DEFINICOES.push(
+  {
+    type: 'arduino_nivel',
+    message0: '%1',
+    args0: [{ type: 'field_dropdown', name: 'NIVEL', options: [['ALTO', 'HIGH'], ['BAIXO', 'LOW']] }],
+    output: 'Number', style: 'arduino_blocks',
+    tooltip: 'HIGH (ALTO, 5 V) ou LOW (BAIXO, 0 V) — para comparar com a leitura de um pino.',
+  },
+  {
+    type: 'operador_maior_igual',
+    message0: '%1 ≥ %2',
+    args0: [{ type: 'input_value', name: 'A', check: 'Number' }, { type: 'input_value', name: 'B', check: 'Number' }],
+    inputsInline: true, output: 'Boolean', style: 'operadores_blocks',
+  },
+  {
+    type: 'operador_menor_igual',
+    message0: '%1 ≤ %2',
+    args0: [{ type: 'input_value', name: 'A', check: 'Number' }, { type: 'input_value', name: 'B', check: 'Number' }],
+    inputsInline: true, output: 'Boolean', style: 'operadores_blocks',
+  },
+  {
+    type: 'operador_diferente',
+    message0: '%1 ≠ %2',
+    args0: [{ type: 'input_value', name: 'A' }, { type: 'input_value', name: 'B' }],
+    inputsInline: true, output: 'Boolean', style: 'operadores_blocks',
+  },
+  {
+    type: 'operador_limitar',
+    message0: 'limitar %1 entre %2 e %3',
+    args0: [{ type: 'input_value', name: 'VALOR', check: 'Number' }, { type: 'input_value', name: 'MIN', check: 'Number' }, { type: 'input_value', name: 'MAX', check: 'Number' }],
+    inputsInline: true, output: 'Number', style: 'operadores_blocks',
+    tooltip: 'Se o valor passar do máximo, fica no máximo; se ficar abaixo do mínimo, fica no mínimo (constrain).',
+  },
+  {
+    type: 'atuadores_buzzer_tocar',
+    message0: 'tocar buzzer no pino %1 com frequência %2 Hz',
+    args0: [
+      { type: 'field_dropdown', name: 'PINO', options: BLOCOS_PINOS_DIGITAIS.filter((p) => p[1] === '5').concat(BLOCOS_PINOS_DIGITAIS.filter((p) => p[1] !== '5')) },
+      { type: 'input_value', name: 'FREQ', check: 'Number' },
+    ],
+    previousStatement: null, nextStatement: null,
+    style: 'atuadores_blocks', inputsInline: true,
+    tooltip: 'O som continua até o bloco "parar buzzer".',
+  },
+  {
+    type: 'display_lcd_continuar',
+    message0: 'continuar escrevendo %1 no LCD',
+    args0: [{ type: 'input_value', name: 'TEXTO' }],
+    previousStatement: null, nextStatement: null,
+    style: 'display_blocks', inputsInline: true,
+    tooltip: 'Escreve logo depois do último texto, sem mudar a posição do cursor.',
+  },
+  {
+    type: 'sensores_tempo',
+    message0: 'milissegundos desde que ligou',
+    output: 'Number', style: 'sensores_blocks',
+    tooltip: 'millis(): quantos milissegundos passaram desde que a placa ligou.',
+  },
+);
+
+/* O buzzer funciona em qualquer pino digital (inclusive A0–A5); a 7 segmentos ganha a escolha do display. */
+for (const d of BLOCOS_DEFINICOES) {
+  if (['atuadores_buzzer_freq', 'atuadores_buzzer_nota', 'atuadores_buzzer_parar'].includes(d.type)) {
+    d.args0[0].options = BLOCOS_PINOS_DIGITAIS.filter((p) => p[1] === '5').concat(BLOCOS_PINOS_DIGITAIS.filter((p) => p[1] !== '5'));
+  }
+  if (d.type === 'display_7seg_mostrar') {
+    d.message0 = 'mostrar %1 no display de 7 segmentos %2';
+    d.args0 = d.args0.concat([{ type: 'field_dropdown', name: 'QUAL', options: [['1 (pinos 2–8)', 'D1'], ['2 (pinos 10–13, A0–A2)', 'D2']] }]);
+  }
+}
+
+/* Extensões de hardware no estilo do PictoBlox: cor da extensão e ícone à esquerda. */
+for (const d of BLOCOS_DEFINICOES) {
+  const t = d.type;
+  let g = null;
+  if (/^arduino_/.test(t) || t === 'sensores_tempo' || t === 'sensores_mapear') g = 'ext_placa';
+  else if (/^atuadores_/.test(t)) g = 'ext_atuadores';
+  else if (/^sensores_/.test(t)) g = 'ext_sensores';
+  else if (/^display_/.test(t)) g = 'ext_display';
+  else if (/^serial_/.test(t)) g = 'ext_comunicacao';
+  if (g && typeof blocosMarcarExtensao === 'function') blocosMarcarExtensao(d, g, 'uno');
+}
 
 Blockly.defineBlocksWithJsonArray(BLOCOS_DEFINICOES);

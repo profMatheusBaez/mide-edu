@@ -38,7 +38,13 @@ if (typeof Blockly !== 'undefined' && Blockly.Msg) {
 const PERFIS_BLOCOS = {
   uno: {
     rotulo: 'Código gerado (C++)',
-    toolbox: () => blocosMontarToolbox(),
+    toolboxCompleta: () => blocosMontarToolbox(),
+    toolbox: () => guiaFiltrarToolbox(blocosMontarToolbox(), guiaPaleta(), { UNO_VARIAVEIS: ['variables_set', 'variables_get', 'variaveis_somar'] }),
+    itensCustom: (nome) => (nome === 'UNO_VARIAVEIS' ? [
+      { kind: 'block', type: 'variables_set', inputs: { VALUE: _num(0) } },
+      { kind: 'block', type: 'variaveis_somar', inputs: { VALOR: _num(1) } },
+      { kind: 'block', type: 'variables_get' },
+    ] : []),
     gerar: (ws) => blocosGerarSketch(ws),
     realce: (codigo) => (typeof realcar === 'function' ? realcar(codigo) : codigo),
   },
@@ -53,7 +59,14 @@ const PERFIS_BLOCOS = {
      (Verificar/Enviar); o painel pode mostrar a outra só para ler. */
   microbit: {
     rotulo: () => 'Código gerado (' + (blocosLinguagemMb() === 'micropython' ? 'MicroPython' : 'JavaScript') + ')',
-    toolbox: () => blocosMontarToolboxMB({ linguagem: blocosLinguagemMb(), permitidos: estadoBlocos.paletaMb || null }),
+    toolboxCompleta: () => blocosMontarToolboxMB({ linguagem: blocosLinguagemMb(), permitidos: null }),
+    toolbox: () => blocosMontarToolboxMB({ linguagem: blocosLinguagemMb(), permitidos: guiaPaleta() }),
+    /* a categoria Variáveis é montada na hora (mbFlyoutVariaveis): estes são os blocos dela */
+    itensCustom: (nome) => (nome === 'MB_VARIAVEIS' ? [
+      { kind: 'block', type: 'mb_var_definir', inputs: { VALOR: _num(0) } },
+      { kind: 'block', type: 'mb_var_mudar', inputs: { VALOR: _num(1) } },
+      { kind: 'block', type: 'variables_get' },
+    ] : []),
     gerar: (ws) => (blocosLinguagemMb() === 'micropython' ? blocosGerarMbPy(ws) : blocosGerarMbJs(ws)),
     realce: (codigo) => (typeof realcarMicrobit === 'function' ? realcarMicrobit(codigo, blocosLinguagemMb()) : codigo),
     tema: (escuro) => (escuro ? BLOCOS_TEMA_MB_ESCURO : BLOCOS_TEMA_MB_CLARO),
@@ -88,13 +101,27 @@ const estadoBlocos = {
   carregando: false,    // true enquanto um workspace é (re)carregado: não vira rascunho
 };
 
+/* Toolbox do perfil atual (já filtrada no Guiado), com o nome da categoria no alto de cada flyout. */
+function blocosToolboxAtual() {
+  const def = PERFIS_BLOCOS[estadoBlocos.perfil].toolbox();
+  return typeof blocosComTitulos === 'function' ? blocosComTitulos(def) : def;
+}
+
+/* Placas com o seletor Livre / Guiado (as que têm missões). */
+const blocosComMissoes = (perfil) => ['uno', 'microbit', 'k10'].includes(perfil || estadoBlocos.perfil);
+
 /* Rascunhos: um por placa. Em memória (troca de placa na mesma sessão) e
    em localStorage (fechar e reabrir a IDE mantém os blocos, sem misturar
    Uno e LEGO). */
 const rascunhosBlocos = new Map();
 const chaveRascunhoBlocos = (chave) => 'academy_blocos_rascunho_' + String(chave).replace(':', '_') + '_v1';
-/* Um rascunho por placa; na micro:bit, um por missão (o workspace é o mesmo nas duas linguagens). */
-const blocosChave = () => (estadoBlocos.perfil === 'microbit' && estadoBlocos.faseMb ? 'microbit:' + estadoBlocos.faseMb : estadoBlocos.perfil);
+/* Modo livre: um rascunho por placa (a mesma chave de antes do guiado, para não perder nada).
+   Modo guiado: um rascunho por missão (na micro:bit, o mesmo nas duas linguagens). */
+const blocosChave = () => {
+  const p = estadoBlocos.perfil;
+  if (blocosComMissoes(p) && typeof guiaModoAtivo === 'function' && guiaModoAtivo() === 'guiado' && GUIA.fase) return p + ':' + GUIA.fase.id;
+  return p;
+};
 
 /* ------------------------------------------------------------
  * Injeção do workspace — só na primeira vez que a aba é exibida.
@@ -106,7 +133,7 @@ function blocosInjetar() {
   if (estadoBlocos.injetado) return;
 
   const ws = Blockly.inject('blocos-workspace', {
-    toolbox: PERFIS_BLOCOS[estadoBlocos.perfil].toolbox(),
+    toolbox: blocosToolboxAtual(),
     /* sprites (zoom, lixeira) e sons vêm da cópia local — sem isto o Blockly busca em static.blockly.com */
     media: 'js/vendor/blockly/media/',
     renderer: 'zelos',
@@ -124,10 +151,17 @@ function blocosInjetar() {
   });
   /* categoria "Variáveis" do micro:bit (blocos "definir/mudar", no vocabulário do MakeCode) */
   if (typeof mbFlyoutVariaveis === 'function') ws.registerToolboxCategoryCallback('MB_VARIAVEIS', mbFlyoutVariaveis);
+  if (typeof blocosFlyoutVariaveisUno === 'function') ws.registerToolboxCategoryCallback('UNO_VARIAVEIS', blocosFlyoutVariaveisUno);
 
   ws.addChangeListener((ev) => {
-    if (ev.isUiEvent || estadoBlocos.carregando) return;
+    if (estadoBlocos.carregando) return;
+    if (ev.isUiEvent) {
+      /* abrir uma categoria cria os blocos do flyout: o guia volta a piscar o bloco certo */
+      if (ev.type === Blockly.Events.TOOLBOX_ITEM_SELECT || ev.type === Blockly.Events.BLOCK_DRAG || ev.type === Blockly.Events.VIEWPORT_CHANGE) guiaAoMudarWorkspace(ev);
+      return;
+    }
     blocosAvaliarHats();
+    guiaAoMudarWorkspace(ev);
     blocosAgendarAtualizarCodigo();
     blocosAgendarSalvarRascunho();
   });
@@ -135,6 +169,7 @@ function blocosInjetar() {
   blocosCarregarRascunho(estadoBlocos.perfil);
   blocosAtualizarRotulo();
   blocosAtualizarCodigo();
+  guiaAtualizar();
   window.addEventListener('pagehide', blocosSalvarRascunho);
 }
 
@@ -173,8 +208,36 @@ function blocosCarregarRascunho() {
       try { Blockly.serialization.workspaces.load(JSON.parse(texto), ws); }
       catch (e) { ws.clear(); }   /* rascunho corrompido: começa vazio, sem travar a aba */
     }
+    if (guiaModoAtivo() === 'guiado') guiaCriarVariaveis(ws);   // as variáveis da missão já existem
   } finally { estadoBlocos.carregando = false; }
   blocosAvaliarHats();
+}
+
+/* Livre ↔ Guiado, ou outra missão no guiado: toolbox, rascunho e passos de novo. */
+function blocosReconfigurarPorModo() {
+  if (blocosComMissoes()) {
+    guiaPrepararFase(guiaModoAtivo() === 'guiado' && typeof estado !== 'undefined' ? estado.fase : null);
+  } else {
+    guiaPrepararFase(null);
+  }
+  const ws = estadoBlocos.workspace;
+  if (ws) {
+    ws.updateToolbox(blocosToolboxAtual());
+    blocosCarregarRascunho();
+    blocosAtualizarCodigo();
+    requestAnimationFrame(() => Blockly.svgResize(ws));
+  }
+  blocosAtualizarRotulo();
+  guiaAtualizar();
+}
+
+/* Uma missão foi aberta no currículo: no guiado, os blocos passam a ser os dela. */
+function blocosAoAbrirFase(fase) {
+  if (!blocosComMissoes()) return;
+  if (guiaModoAtivo() !== 'guiado') { GUIA.fase = null; guiaRenderBarra(); return; }
+  if (GUIA.fase === fase && GUIA.compilado) return;
+  blocosSalvarRascunho();   // com a chave da missão que estava aberta
+  blocosReconfigurarPorModo();
 }
 
 /* Troca o perfil (Uno ↔ LEGO): guarda o workspace da placa atual, troca
@@ -185,16 +248,12 @@ function blocosTrocarPerfil(perfil) {
   estadoBlocos.perfil = perfil;
   estadoBlocos.visaoMb = null;
   estadoBlocos.paletaMb = null;
+  GUIA.modo = guiaLerModo();
+  GUIA.fase = null;
   const ws = estadoBlocos.workspace;
-  if (ws) {
-    ws.setTheme(blocosTemaAtual());
-    ws.updateToolbox(PERFIS_BLOCOS[perfil].toolbox());
-    blocosCarregarRascunho(perfil);
-    blocosAtualizarCodigo();
-    requestAnimationFrame(() => Blockly.svgResize(ws));
-  }
+  if (ws) ws.setTheme(blocosTemaAtual());
   if (!ws) estadoBlocos.ultimoCodigo = '';
-  blocosAtualizarRotulo();
+  blocosReconfigurarPorModo();
 }
 
 function blocosAtualizarRotulo() {
@@ -215,12 +274,11 @@ function blocosAtualizarRotulo() {
    e regera o código. `opcoes.paleta` = Set de tipos liberados, ou null para todos. */
 function blocosMbReconfigurar(opcoes) {
   const o = opcoes || {};
-  if ('paleta' in o) estadoBlocos.paletaMb = o.paleta;
   if ('visao' in o) estadoBlocos.visaoMb = o.visao;
   const ws = estadoBlocos.workspace;
   if (estadoBlocos.perfil !== 'microbit') return;
   if (ws) {
-    ws.updateToolbox(PERFIS_BLOCOS.microbit.toolbox());
+    ws.updateToolbox(blocosToolboxAtual());
     blocosAtualizarCodigo();
   }
   blocosAtualizarRotulo();
@@ -239,6 +297,7 @@ function blocosCarregarWorkspace(json) {
   blocosAvaliarHats();
   blocosAtualizarCodigo();
   blocosSalvarRascunho();
+  guiaAtualizar();
   return true;
 }
 
@@ -292,9 +351,16 @@ function blocosPodeGravar() {
  * Ciclo de vida da aba
  * ---------------------------------------------------------- */
 function blocosAoAbrir() {
+  if (!estadoBlocos.injetado) {
+    GUIA.modo = guiaLerModo();
+    if (blocosComMissoes() && guiaModoAtivo() === 'guiado') guiaPrepararFase(typeof estado !== 'undefined' ? estado.fase : null);
+  } else if (blocosComMissoes() && guiaModoAtivo() === 'guiado' && typeof estado !== 'undefined' && GUIA.fase !== estado.fase) {
+    blocosAoAbrirFase(estado.fase);
+  }
   blocosInjetar();
   requestAnimationFrame(() => {
     if (estadoBlocos.workspace) Blockly.svgResize(estadoBlocos.workspace);
+    guiaAtualizar();
   });
 }
 

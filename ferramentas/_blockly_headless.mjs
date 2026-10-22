@@ -28,7 +28,10 @@ export const Blockly = resolverBlockly();
 globalThis.Blockly = Blockly;
 
 /* Executa js/<nome>.js no contexto global (são scripts comuns, não módulos). */
+let _aparencia = false;
 export function carregarScripts(nomes) {
+  /* ícones e categorias no estilo do PictoBlox: os blocos das extensões dependem disto */
+  if (!_aparencia) { _aparencia = true; nomes = ['blocos_aparencia'].concat(nomes.filter((n) => n !== 'blocos_aparencia')); }
   for (const nome of nomes) {
     const arquivo = path.join(RAIZ, 'js', nome + '.js');
     vm.runInThisContext(fs.readFileSync(arquivo, 'utf8'), { filename: arquivo });

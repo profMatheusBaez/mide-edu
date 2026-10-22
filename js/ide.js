@@ -344,7 +344,7 @@ function abrirFase(i) {
   if (!desbloqueada(i)) return;
   estado.indice = i;
   estado.fase = FASES[i];
-  if (estado.placaCurso === 'microbit' && typeof mbAoAbrirFase === 'function') mbAoAbrirFase(estado.fase);   // blocos e paleta da missão
+  if (typeof blocosAoAbrirFase === 'function') blocosAoAbrirFase(estado.fase);   // modo Guiado dos blocos: passos da missão
   estado.abertos.add(estado.fase.setor);
   estado.treino = null;
   estado.etapa = estado.fase.conceito ? 'conceito' : 'instrucao';
@@ -822,6 +822,8 @@ async function gravar() {
         concluirFase();
       } else if (estado.placaCurso === 'k10' && estado.aba === 'completo') {
         oferecerConfirmacaoK10();
+      } else if (estado.aba === 'blocos' && typeof blocosGuiaConcluiu === 'function' && blocosGuiaConcluiu()) {
+        blocosGuiaConcluirMissao();   // missão montada no modo Guiado dos blocos
       }
     } else {
       // Distingue erro de compilação de erro de gravação: se o log chegou
