@@ -1,6 +1,6 @@
 # MIDE EDU
 
-IDE gamificada para aprender Arduino, com missões, XP e Modo Treinamento linha por linha.
+IDE gamificada para aprender Arduino e UNIHIKER K10, com missões, XP e Modo Treinamento linha por linha.
 
 **Abrir:** https://profmatheusbaez.github.io/mide-edu/ — no **Google Chrome** ou **Microsoft Edge** do computador.
 
@@ -14,6 +14,15 @@ IDE gamificada para aprender Arduino, com missões, XP e Modo Treinamento linha 
 As 40 missões gravam o programa já compilado com o avr-gcc. O código livre (Editor C++ e
 Blocos) é traduzido no navegador e roda na **MIDE VM**, um firmware intérprete gravado
 junto. Detalhes, limites e testes: `LEIA-ME.md` §14 e `ferramentas/web/`.
+
+## UNIHIKER K10 em MicroPython direto no navegador
+
+- Escolha **UNIHIKER K10 → MicroPython**, clique em **Conectar K10** (ou direto em **Enviar e executar**) e escolha a placa.
+- A IDE grava o `main.py` pela USB e reinicia o MicroPython; o `print()` aparece no Monitor Serial e **Parar** interrompe o programa.
+- **Primeira vez em cada placa:** **Preparar K10 → Instalar MicroPython na K10** grava o firmware MicroPython oficial da UNIHIKER (o `.bin` baixado do site da UNIHIKER) pelo próprio navegador.
+- O **C++ da K10** funciona na MIDE instalada no laboratório (`INSTALAR.bat`, que já instala o suporte `UNIHIKER:esp32`).
+
+Detalhes, testes e roteiro do primeiro teste: `LEIA-ME.md` §16.
 
 ## 🎮 Joystick: o Arduino vira controle de jogo do PC
 

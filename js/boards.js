@@ -35,6 +35,11 @@ function selecionarCurso(placa, linguagem = 'cpp') {
   if (estado.ocupado || !['uno', 'k10', 'lego', 'microbit'].includes(placa) || !linguagensOk.includes(linguagem)) return;
   if (placa === 'uno') linguagem = 'cpp';
   if (placa === 'lego') linguagem = 'micropython';   // Pybricks: só Python
+  if (placa === 'k10' && linguagem === 'cpp' && typeof MIDE_WEB !== 'undefined' && MIDE_WEB) {
+    /* no site não há arduino-cli para compilar C++ do ESP32: a K10 vai em MicroPython */
+    linguagem = 'micropython';
+    if (typeof log === 'function') log('No site, a K10 é programada em MicroPython. O C++ da K10 funciona na MIDE instalada no laboratório (INSTALAR.bat).', 'info');
+  }
   if (estado.selecionouPlaca) {
     salvarProgresso();
     rascunhosCursos.set(chaveCursoAtual, { indice: estado.indice, codigo: $('#editor-livre').value });
@@ -68,6 +73,7 @@ function selecionarCurso(placa, linguagem = 'cpp') {
   if (typeof blocosTrocarPerfil === 'function') blocosTrocarPerfil(placa === 'lego' ? 'lego' : (placa === 'microbit' ? 'microbit' : 'uno'));
   if (placa === 'microbit' && typeof blocosMbReconfigurar === 'function') blocosMbReconfigurar({ visao: null, paleta: null });   // a linguagem do curso pode ter mudado
   if (typeof mbAtivar === 'function') mbAtivar(placa === 'microbit');
+  if (typeof k10WebAtivar === 'function') k10WebAtivar(typeof k10Navegador === 'function' && k10Navegador());   // depois do LEGO e da micro:bit, que também mexem na barra
   $('#aba-livre').innerHTML = placa === 'microbit'
     ? (linguagem === 'micropython' ? 'Editor MicroPython' : 'Editor JavaScript')
     : (linguagem === 'micropython' ? 'Editor Python' : 'Editor C++');
@@ -120,6 +126,7 @@ function oferecerConfirmacaoK10() {
 
 async function executarMicroPython(enviar) {
   if (estado.ocupado || !estado.selecionouPlaca) return;
+  if (typeof k10Navegador === 'function' && k10Navegador()) return k10WebExecutar(enviar);   // Chrome/Edge: direto pela USB, sem mpremote
   const codigo = codigoAtual();
   if (!codigo.trim()) return log('Escreva um programa antes de continuar.', 'aviso');
   ocupar(true);
@@ -142,6 +149,7 @@ async function executarMicroPython(enviar) {
 function prepararK10() {
   if (estado.ocupado) return;
   const py = estado.linguagem === 'micropython';
+  if (py && typeof k10Navegador === 'function' && k10Navegador()) return k10WebPreparar();
   const corpo = py
     ? '<p>Para executar Python, a K10 precisa do firmware MicroPython específico da placa e de suas bibliotecas.</p><ol><li>Conecte a K10 e selecione a porta USB.</li><li>Se ela ainda estiver em C++, prepare o firmware seguindo o guia oficial abaixo.</li><li>Use <b>Testar conexão</b>. Depois envie a atividade.</li></ol><p><a href="https://www.unihiker.com/wiki/K10/GettingStarted/gettingstarted_mpy/" target="_blank" rel="noopener">Abrir preparação oficial do MicroPython ↗</a></p><div class="k10-notice">A troca de linguagem na IDE preserva seus estudos. Instalar outro firmware altera o programa que está na placa. Salve seus arquivos antes dessa preparação.</div>'
     : '<p>O curso usa o pacote oficial UNIHIKER 0.0.5 e habilita a comunicação USB para o Monitor Serial.</p><ol><li>Conecte a placa e selecione a porta.</li><li>Instale o suporte C++ neste computador.</li><li>Abra a atividade, confira o código e clique em Upload.</li></ol><p>Se a placa estiver em MicroPython, o upload C++ substitui esse ambiente. Guarde seus arquivos Python antes de mudar.</p>';
@@ -161,7 +169,7 @@ function prepararK10() {
 
 function mostrarMapaK10() {
   abrirModal('Sua trilha UNIHIKER K10',
-    '<p><b>Disponível agora:</b> 10 módulos e 50 atividades, cada uma com versão C++ e MicroPython.</p>' +
+    `<p><b>Disponível agora:</b> ${K10_MODULOS.length} módulos e ${FASES.length || K10_MODULOS.length * 5} atividades, cada uma com versão C++ e MicroPython.</p>` +
     '<ol class="k10-next">' + K10_MODULOS.map(n => `<li>${escapar(n.nome)}</li>`).join('') + '</ol>' +
     '<p><b>Próxima camada:</b> ' + K10_PROXIMOS.map(escapar).join(', ') + '.</p>');
 }
@@ -185,7 +193,7 @@ document.addEventListener('DOMContentLoaded', () => {
     $('#board-language-mb').hidden = true;
     $('#board-language').hidden = false;
     $('#board-language').scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-    $('[data-language="cpp"]').focus();
+    $('#board-language button:not(:disabled)').focus();   // no site o C++ fica desativado
   });
   document.querySelectorAll('[data-language]').forEach(b => b.addEventListener('click', () => selecionarCurso('k10', b.dataset.language)));
   $('#board-theme').addEventListener('click', alternarTema);

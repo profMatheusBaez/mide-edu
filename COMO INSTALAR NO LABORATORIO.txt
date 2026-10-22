@@ -1,5 +1,5 @@
-MIDE EDU - INSTALAÇÃO NO LABORATÓRIO (ARDUINO UNO)
-====================================================
+MIDE EDU - INSTALAÇÃO NO LABORATÓRIO (ARDUINO UNO + UNIHIKER K10)
+=================================================================
 
 PRIMEIRO PC (com internet)
 --------------------------
@@ -7,11 +7,14 @@ PRIMEIRO PC (com internet)
 2. Dê dois cliques em INSTALAR.bat.
    - Se o Windows mostrar "O Windows protegeu o computador":
      clique em "Mais informações" e depois em "Executar assim mesmo".
-3. Espere (5 a 15 minutos, depende da internet). O instalador:
+3. Espere (20 a 60 minutos, depende da internet). O instalador:
    - copia a IDE para C:\MIDE EDU
    - baixa o Python portátil e o arduino-cli para dentro dessa pasta
    - instala o suporte ao Arduino Uno e as bibliotecas Servo e
      LiquidCrystal I2C (também dentro da pasta)
+   - instala o suporte C++ da UNIHIKER K10 (pacote oficial da
+     DFRobot, uns 1,5 GB, também dentro da pasta). Para pular:
+     INSTALAR.bat -SemK10  (a K10 em MicroPython funciona igual)
    - cria o atalho "MIDE EDU" na Área de Trabalho
    - confere tudo: no fim aparece "PRONTO!" em verde.
 
@@ -22,7 +25,7 @@ fica em C:\MIDE EDU.
 OS OUTROS 14 PCs (mais rápido, sem baixar nada)
 ------------------------------------------------
 1. Copie a pasta C:\MIDE EDU do primeiro PC para um pendrive
-   (fica com uns 300 MB).
+   (fica com uns 2 GB com a K10; uns 300 MB com -SemK10).
 2. Em cada PC, abra a pasta no pendrive e dê dois cliques em
    INSTALAR.bat. Ele copia tudo para C:\MIDE EDU e cria o atalho,
    sem usar a internet.
@@ -34,8 +37,14 @@ ele baixa tudo de novo em cada um.)
 ANTES DA AULA
 -------------
 - Ligue o Arduino no USB e dê dois cliques em C:\MIDE EDU\VERIFICAR.bat.
-  Ele compila dois programas de teste e mostra em qual porta COM
+  Ele compila os programas de teste (Uno e, se instalado, K10) e mostra em qual porta COM
   a placa está. Não grava nada na placa.
+- UNIHIKER K10 em MicroPython: use o Chrome ou o Edge. Na primeira
+  vez em cada placa, clique em "Preparar K10" > "Instalar MicroPython
+  na K10" (precisa do arquivo .bin do firmware MicroPython da K10,
+  baixado do site da UNIHIKER). Dica: salve esse arquivo como
+  C:\MIDE EDU\assets\k10\micropython-k10.bin antes de copiar a
+  pasta para o pendrive: a IDE usa esse sozinha em todos os PCs.
 - Arduinos CLONES (chip CH340) precisam do driver CH340 no Windows.
   Se o VERIFICAR.bat avisar que falta, peça a quem tem senha de
   administrador para instalar o driver CH340 (uma vez por PC).

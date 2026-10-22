@@ -1,0 +1,5 @@
+Coloque aqui o firmware MicroPython da UNIHIKER K10 com o nome
+micropython-k10.bin (a imagem completa de 16 MB, gravada no endereço 0x0).
+A tela "Preparar K10" da MIDE usa esse arquivo sozinha.
+O arquivo é da DFRobot e não vem junto com a MIDE:
+https://www.unihiker.com/wiki/K10/GettingStarted/gettingstarted_mpy/

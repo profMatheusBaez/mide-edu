@@ -13,7 +13,8 @@
  *   /api/monitor   -> Monitor Serial pela Web Serial
  *   /api/portas    -> portas USB que o aluno já autorizou
  *
- * Só para o Arduino Uno (e compatíveis com ATmega328P + optiboot).
+ * Arduino Uno (ATmega328P + optiboot). A UNIHIKER K10 em MicroPython
+ * usa a mesma Web Serial, mas pelo REPL (k10_mp.js / k10_web.js).
  * Precisa de Chrome ou Edge no computador (Web Serial).
  * ============================================================ */
 'use strict';
@@ -236,6 +237,8 @@ if (MIDE_WEB) (function () {
         return { ok: true, log: 'Arduino Uno — ATmega328P, 16 MHz, 32 KB de flash (0,5 KB do bootloader), 2 KB de RAM.\nGravação pela USB direto do navegador (Web Serial).' };
       case '/api/encerrar':
         return { ok: true };
+      case '/api/micropython':
+        return { ok: false, log: 'Na MIDE EDU web a K10 é programada pela USB do navegador: abra no Google Chrome ou no Microsoft Edge.' };
     }
     return { ok: false, log: 'Esta função não existe na MIDE EDU web.' };
   }
@@ -293,9 +296,11 @@ if (MIDE_WEB) (function () {
         pedirPorta();
       }, true);
     }
-    // a K10 precisa do servidor com o arduino-cli: some na versão web
-    const k10 = document.getElementById('choose-k10');
-    if (k10) k10.hidden = true;
+    // K10 no site: só MicroPython (o C++ do ESP32 precisa do arduino-cli do laboratório)
+    const cpp = document.querySelector('[data-language="cpp"]');
+    if (cpp) { cpp.disabled = true; cpp.textContent = 'C++ (só na MIDE do laboratório)'; cpp.title = 'No site não há compilador C++ para o ESP32 da K10. Use o INSTALAR.bat no laboratório.'; }
+    const opCpp = document.querySelector('#curso-linguagem option[value="cpp"]');
+    if (opCpp) { opCpp.disabled = true; opCpp.textContent = 'C++ (laboratório)'; }
     document.documentElement.classList.add('mide-web');
   });
 

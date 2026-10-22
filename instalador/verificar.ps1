@@ -1,11 +1,12 @@
 ﻿# ============================================================
-#  MIDE EDU — conferência do PC (Arduino Uno)
+#  MIDE EDU — conferência do PC (Arduino Uno + UNIHIKER K10)
 # ------------------------------------------------------------
 #  Rode pelo VERIFICAR.bat. Sobe o servidor da IDE escondido numa
-#  porta de teste, pede para ele COMPILAR de verdade dois sketches
-#  (a escada de PWM e um com Servo + LCD I2C), lista as placas
-#  conectadas e confere o driver CH340 dos clones. Não grava nada
-#  na placa.
+#  porta de teste, pede para ele COMPILAR de verdade os sketches de
+#  teste (a escada de PWM, um com Servo + LCD I2C e, se o suporte
+#  da K10 estiver instalado, a primeira atividade C++ da K10), lista
+#  as placas conectadas e confere o driver CH340 dos clones. Não
+#  grava nada na placa.
 # ============================================================
 
 param(
@@ -17,13 +18,16 @@ $ProgressPreference    = 'SilentlyContinue'
 $PORTA   = 8099
 $URL     = "http://127.0.0.1:$PORTA"
 $problemas = @()
+# o servidor e o arduino-cli usam o núcleo e as bibliotecas de dentro da pasta
+$dadosCli = Join-Path $Pasta 'arduino-cli\dados'
+if (Test-Path $dadosCli) { $env:ARDUINO_DIRECTORIES_DATA = $dadosCli }
 
 function Ok($texto)    { Write-Host "      OK  $texto" -ForegroundColor Green }
 function Aviso($texto) { Write-Host "      !!  $texto" -ForegroundColor Yellow }
 function Falha($texto) { Write-Host "      XX  $texto" -ForegroundColor Red; $script:problemas += $texto }
 
 function Api($rota, $corpo) {
-    $req = @{ Uri = "$URL$rota"; UseBasicParsing = $true; TimeoutSec = 300; ErrorAction = 'Stop' }
+    $req = @{ Uri = "$URL$rota"; UseBasicParsing = $true; TimeoutSec = 900; ErrorAction = 'Stop' }
     if ($corpo) {
         $req.Method      = 'Post'
         $req.ContentType = 'application/json; charset=utf-8'
@@ -104,12 +108,37 @@ void setup() {
 void loop() {
 }
 "@
-        foreach ($t in @(
-            @{ nome = 'escada_pwm';  rotulo = 'fase "Escada de brilho com PWM"'; codigo = $escada },
-            @{ nome = 'bibliotecas'; rotulo = 'bibliotecas Servo + LiquidCrystal I2C'; codigo = $bibliotecas })) {
+        $k10 = @"
+#include "unihiker_k10.h"
+
+UNIHIKER_K10 k10;
+
+void setup() {
+  k10.begin();
+  k10.initScreen(2);
+  k10.creatCanvas();
+  k10.setScreenBackground(0x102638);
+  k10.canvas->canvasText("MIDE EDU", 1, 0xFFFFFF);
+  k10.canvas->updateCanvas();
+}
+
+void loop() {
+}
+"@
+        $testes = @(
+            @{ nome = 'escada_pwm';  rotulo = 'fase "Escada de brilho com PWM"'; codigo = $escada; placa = 'uno' },
+            @{ nome = 'bibliotecas'; rotulo = 'bibliotecas Servo + LiquidCrystal I2C'; codigo = $bibliotecas; placa = 'uno' })
+        $cores = (& $cli core list --format json 2>$null) -join "`n"
+        if ($cores -match '"UNIHIKER:esp32"') {
+            $testes += @{ nome = 'k10_tela'; rotulo = 'UNIHIKER K10 em C++ (a 1ª vez leva alguns minutos)'; codigo = $k10; placa = 'k10' }
+        } else {
+            Aviso "suporte C++ da K10 não instalado (a K10 em MicroPython funciona pelo navegador)"
+        }
+        foreach ($t in $testes) {
             Write-Host "      compilando $($t.rotulo)..."
             try {
-                $r = Api '/api/compilar' @{ codigo = $t.codigo; nome = $t.nome; fqbn = 'arduino:avr:uno' }
+                $fqbn = if ($t.placa -eq 'k10') { 'UNIHIKER:esp32:k10:CDCOnBoot=cdc,Model=None' } else { 'arduino:avr:uno' }
+                $r = Api '/api/compilar' @{ codigo = $t.codigo; nome = $t.nome; fqbn = $fqbn; placa = $t.placa }
                 if ($r.ok) { Ok "compila: $($t.rotulo)" }
                 else {
                     Falha "não compila: $($t.rotulo)"

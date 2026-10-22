@@ -2,3 +2,4 @@ __pycache__/
 *.pyc
 app-joystick/montagem.json
 app-joystick/erro.txt
+ferramentas/node_modules/

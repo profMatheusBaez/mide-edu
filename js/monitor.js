@@ -27,7 +27,8 @@ const CORES_TRAC = ['#00979C', '#D35400', '#7B4EA8', '#2E9B2E', '#D93025',
  * Ligar / desligar
  * ---------------------------------------------------------- */
 /* Placas sem servidor de serial: o texto chega direto do navegador (Bluetooth do LEGO, USB da micro:bit). */
-const monitorSemServidor = () => estado.placaCurso === 'lego' || estado.placaCurso === 'microbit';
+const monitorSemServidor = () => estado.placaCurso === 'lego' || estado.placaCurso === 'microbit' ||
+  (typeof k10Navegador === 'function' && k10Navegador());   // K10 MicroPython: o print() chega pela Web Serial (k10_web.js)
 
 async function ligarMonitor() {
   if (monitorSemServidor()) return;   // o hub manda o print() por Bluetooth (lego.js); a micro:bit, pela USB (microbit.js)
@@ -149,6 +150,13 @@ async function enviarMonitor() {
     }
     return;
   }
+  if (typeof k10Navegador === 'function' && k10Navegador()) {
+    if (await k10WebStdin(texto, $('#mon-final').value)) {
+      escreverMonitor('→ ' + texto, 'env');
+      campo.value = '';
+    }
+    return;
+  }
   if (!MON.aberto) {
     escreverMonitor('Conecte antes de enviar.', 'sis');
     return;
@@ -185,7 +193,7 @@ function monitorReceberLinha(linha) {
 }
 
 function monitorReceberTexto(texto) {
-  if (!MON_LEGO.buffer) MON_LEGO.buffer = (estado.placaCurso === 'microbit' ? MicrobitUSB : PybricksHub).criarBufferLinhas(monitorReceberLinha);
+  if (!MON_LEGO.buffer) MON_LEGO.buffer = (estado.placaCurso === 'microbit' ? MicrobitUSB : (estado.placaCurso === 'k10' ? K10MP : PybricksHub)).criarBufferLinhas(monitorReceberLinha);
   MON_LEGO.buffer.adicionar(texto);
   clearTimeout(MON_LEGO.timer);
   if (MON_LEGO.buffer.pendente()) MON_LEGO.timer = setTimeout(() => MON_LEGO.buffer.descarregar(), 300);

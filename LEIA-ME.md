@@ -163,8 +163,13 @@ O currículo K10 tem duas linguagens:
 | Câmera e IA visual | 5 | prévia da câmera, moldura, foto no microSD, exibição e QR Code |
 | Arquivos e microSD | 5 | inicialização, gravação, reprodução, imagem e diário de sensores |
 | Wi‑Fi e comunicação | 5 | varredura, lista de redes, painel de conexão, mensagens e monitor IoT |
+| Motores DC (driver DFRobot) | 5 | um motor, frente/ré/parar, carro com 2 motores, curvas e carro com 4 motores |
+| Servo motor (driver DFRobot) | 5 | centralizar, varredura, botões A/B, servo pela luz e braço apontador |
 
-Cada atividade tem uma versão C++ e uma versão MicroPython. A aba **Código
+Cada atividade tem uma versão C++ e uma versão MicroPython. **No site** (e em
+qualquer Chrome/Edge) a trilha MicroPython grava direto pela USB do navegador
+(§16); o **C++ da K10 só funciona na MIDE instalada** (servidor local +
+`arduino-cli`, o `INSTALAR.bat` já instala o suporte). A aba **Código
 completo** existe para que projetos maiores possam ser carregados direto na placa
 sem exigir digitação longa do aluno.
 
@@ -207,8 +212,11 @@ Clones com chip **CH340** precisam do driver CH341SER. A IDE mostra
 ### 7.5 UNIHIKER K10
 
 Na IDE, use **Preparar K10**. Para C++, a IDE usa o índice oficial da UNIHIKER e
-o pacote `UNIHIKER:esp32` versão `0.0.5`. Para MicroPython, prepare a placa com o
-firmware oficial da K10 antes de enviar arquivos `.py`.
+o pacote `UNIHIKER:esp32` versão `0.0.5` (o `INSTALAR.bat` do laboratório já
+instala; ~1,5 GB). Para MicroPython, o **Preparar K10** instala o firmware
+MicroPython da K10 pela USB do navegador (Chrome/Edge) — ver §16. Sem Chrome/Edge,
+o servidor local ainda usa o caminho antigo (`pip install -r requirements-k10.txt`,
+mpremote).
 
 ---
 
@@ -530,8 +538,9 @@ A mesma pasta funciona de dois jeitos:
 | `index.html` direto do disco, pendrive ou site (GitHub Pages etc.) | **web** | no navegador | **Web Serial** (USB) pelo navegador |
 
 O modo web é escolhido sozinho pelo endereço da página (`?web=1` / `?web=0` força).
-Precisa de **Google Chrome ou Microsoft Edge** no computador. Só o **Arduino Uno**
-(a K10 some do seletor; LEGO e micro:bit continuam como antes, já eram do navegador).
+Precisa de **Google Chrome ou Microsoft Edge** no computador. **Arduino Uno** em C++
+(abaixo), **UNIHIKER K10 em MicroPython** (§16; o C++ da K10 fica desativado no site)
+e LEGO e micro:bit como antes (já eram do navegador).
 
 **Como o aluno grava:** clica em **Upload** (ou na lista de portas → "Conectar o
 Arduino (USB)…"), escolhe a placa na janela do navegador e pronto. O navegador lembra a
@@ -660,4 +669,68 @@ MIDE VM do site.
 
 **Ainda não testado:** no Uno real, o app e os `.bat` no Windows (só revisados; o app foi testado no
 Linux) e o pedido de permissão de rede local do Chrome/Edge ao falar com o app a partir do site.
+
+---
+
+## 16. UNIHIKER K10 no navegador (MicroPython)
+
+No **site** e na MIDE do laboratório, com **Google Chrome ou Microsoft Edge**, a trilha
+**MicroPython** da K10 não precisa de servidor, Python nem mpremote: a IDE conversa com o
+MicroPython da placa pela USB do navegador (Web Serial), do mesmo jeito que o mpremote
+faz (o "raw REPL").
+
+**Barra de cima (trilha K10 · MicroPython):** **Conectar K10** · estado · **Parar**. O
+seletor de porta some: na primeira vez, o navegador pergunta qual é a placa (aparece como
+"USB JTAG/serial debug unit" ou "ESP32-S3") e depois lembra.
+
+- **Verificar** confere a escrita do Python aqui mesmo (o `mpy-cross`, o mesmo do LEGO),
+  sem placa.
+- **Enviar e executar**: para o programa da K10 (Ctrl+C), confere se a placa tem o
+  firmware da K10 (biblioteca `unihiker_k10`), confere a sintaxe na própria placa, grava
+  `academy_upload.py` e troca pelo `main.py` (o antigo vira `main.academy-backup.py`) e
+  reinicia o MicroPython, que roda o programa novo. Se o cabo sair no meio, o `main.py`
+  antigo continua lá.
+- **Monitor Serial / Gráfico Serial**: o `print()` da K10. O campo de envio manda texto
+  para o `input()` do programa.
+- **Parar**: Ctrl+C no programa.
+
+**Primeira vez em cada placa — Preparar K10 → Instalar MicroPython na K10.** As K10 vêm
+de fábrica com um programa C++, não com MicroPython. O Preparar K10 grava a imagem do
+firmware MicroPython da UNIHIKER (o `.bin` de 16 MB gravado no endereço 0x0) com o
+`esptool-js` da Espressif, direto do navegador (2 a 5 minutos). **Apaga tudo o que está na
+placa.** Se a placa não entrar no modo de gravação: segure **BOOT**, aperte e solte
+**RST**, solte **BOOT** e tente de novo; no fim, aperte **RST**.
+
+- O firmware **não vem junto com a MIDE** (é da DFRobot): baixe o `.bin` oficial na página
+  MicroPython da UNIHIKER (<https://www.unihiker.com/wiki/K10/GettingStarted/gettingstarted_mpy/>)
+  e escolha o arquivo na janela. A IDE confere se é uma imagem completa do ESP32-S3 com
+  MicroPython (e avisa se faltar a biblioteca `unihiker_k10`).
+- Para não escolher o arquivo em cada PC: salve-o como
+  **`assets/k10/micropython-k10.bin`** dentro da pasta da MIDE (ou no repositório do site).
+  A IDE usa esse sozinha.
+- Para voltar ao C++, é só gravar um programa C++ pela MIDE do laboratório.
+
+**Arquivos:** `js/k10_mp.js` (REPL do MicroPython pela Web Serial, sem DOM),
+`js/k10_firmware.js` (validar e gravar o firmware), `js/k10_web.js` (tela),
+`js/vendor/esptool/` (esptool-js 0.7.0, Apache-2.0, com pako e atob-lite, MIT).
+
+**Testes (`ferramentas/k10/`):** `testar_k10_mp.mjs` (33 verificações) fala com uma K10 de
+mentira que implementa o REPL do MicroPython e executa o código de verdade no CPython
+(`_k10_falsa.py`): envio com acentos e de 13 KB byte a byte, backup do `main.py`, erro de
+sintaxe com a linha, placa sem a biblioteca da K10, placa com C++ (sem MicroPython), cabo
+puxado, Parar e `input()`. `testar_k10_navegador.py` (42 verificações, Chromium) faz o
+caminho da tela no site: card da K10, C++ desativado, Enviar pelo Código completo,
+Monitor, Parar, erro no Verificar, validação do firmware, falha sem modo de gravação,
+troca de placa, tema escuro e 820 px. **Não testado:** uma K10 de verdade (gravação do
+firmware com o esptool-js, soft reboot do firmware da DFRobot e o seletor de porta do
+Chrome/Edge no Windows).
+
+**Roteiro para o primeiro teste com a placa:**
+1. Chrome ou Edge → MIDE → UNIHIKER K10 → MicroPython.
+2. Preparar K10 → escolher o `.bin` → Instalar MicroPython na K10 → escolher a placa.
+3. Aperte RST. Preparar K10 → **Testar conexão** → "K10 conectada…".
+4. Missão 1 → Código completo → **Enviar e executar** → a tela mostra K10 EXPLORER.
+5. Missão 2 (`print` a cada segundo) → Monitor Serial mostra "K10 conectada!"; **Parar**
+   interrompe.
+6. Puxe o cabo e ligue de novo → o estado volta para "conectada" sozinho.
 

@@ -62,3 +62,20 @@ body[data-placa="k10"] .conceito-img { max-height:210px; object-fit:contain; bac
 @media(max-width:960px) { body[data-placa="k10"] #centro { grid-template-rows:auto auto auto auto; } .board-photo { height:190px; } }
 @media(max-width:680px) { .board-picker-inner { padding:18px; } .board-options { grid-template-columns:1fr; gap:16px; } .board-photo { height:190px; } .board-card { padding:18px; } .board-eyebrow { margin-top:25px; } #board-language>div,#board-language-mb>div { flex-direction:column; } .board-wordmark { font-size:15px; } #curso-barra>span { flex-basis:100%; } #bt-trocar-placa { padding:7px; font-size:10px; } }
 @media(prefers-reduced-motion:reduce) { .board-card { transition:none; } }
+
+/* ---------- K10 em MicroPython pela USB do navegador (k10_web.js) ---------- */
+#k10-hub { display:flex; align-items:center; gap:8px; flex:0 1 auto; min-width:0; }
+#k10-hub[hidden] { display:none; }
+#k10-hub .tb-btn:disabled { opacity:.5; cursor:not-allowed; }
+body.modo-k10mp #seletor-placa { display:none; }
+#board-language button:disabled { opacity:.55; cursor:not-allowed; }
+.k10-passos { margin:12px 0; padding-left:20px; display:grid; gap:10px; line-height:1.55; }
+.k10-passos .ok { color:var(--ok); font-weight:600; }
+.k10-fw-acoes { display:flex; flex-wrap:wrap; align-items:center; gap:8px 14px; margin-top:6px; }
+.k10-arquivo { display:inline-flex; align-items:center; height:30px; padding:0 12px; border-radius:8px; border:1px solid var(--borda); background:var(--painel2, var(--painel)); color:var(--txt); font-size:12px; font-weight:600; cursor:pointer; }
+.k10-arquivo:hover { border-color:var(--acento, var(--ok)); }
+.k10-arquivo:focus-within { outline:2px solid var(--acento, var(--ok)); outline-offset:2px; }
+.k10-fw-barra { height:8px; border-radius:4px; background:var(--painel2, var(--borda)); overflow:hidden; margin:8px 0; }
+.k10-fw-barra[hidden] { display:none; }
+#k10-fw-progresso { height:100%; width:0; background:var(--ok); transition:width .3s; }
+@media (max-width:960px) { #k10-hub { gap:4px; } #k10-hub .tb-btn span { display:none; } #k10-estado { font-size:0; gap:0; padding:0 10px; max-width:32px; } }   /* só a bolinha: o texto fica no title e na barra de status */

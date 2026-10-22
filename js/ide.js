@@ -735,6 +735,7 @@ function atualizarPlacaStatus() {
 function aoTrocarPorta() {
   if (estado.placaCurso === 'lego') { if (typeof legoAtualizarUI === 'function') legoAtualizarUI(); return; }   // o hub é escolhido por Bluetooth, não por porta
   if (estado.placaCurso === 'microbit') { if (typeof mbAtualizarUI === 'function') mbAtualizarUI(); return; }   // a micro:bit é escolhida pela USB (WebUSB)
+  if (typeof k10Navegador === 'function' && k10Navegador()) { k10WebAtualizarUI(); return; }   // K10 MicroPython: porta escolhida no navegador
   const p = $('#porta').value;
   $('#seletor-placa').classList.toggle('ligado', !!p);
   $('#st-porta').textContent = p ? `${nomeDaPlaca()} em ${p}` : 'nenhuma porta selecionada';
@@ -787,6 +788,7 @@ async function gravar() {
   if (!podeGravar()) return;
   if (estado.placaCurso === 'lego') return legoEnviar();
   if (estado.placaCurso === 'microbit') return mbEnviar();
+  if (typeof k10Navegador === 'function' && k10Navegador()) return k10WebExecutar(true);   // K10 MicroPython: USB do navegador
   const porta = $('#porta').value;
   if (!porta) {
     mostrarPainelInf('saida');

@@ -6,7 +6,7 @@
 <title>MIDE EDU</title>
 <link rel="stylesheet" href="css/estilo.css?v=web1">
 <link rel="stylesheet" href="css/academy.css?v=joy4">
-<link rel="stylesheet" href="css/boards.css?v=web1">
+<link rel="stylesheet" href="css/boards.css?v=k10w1">
 <link rel="stylesheet" href="css/blocos.css?v=web1">
 <link rel="stylesheet" href="css/lego.css?v=web1">
 <link rel="stylesheet" href="css/microbit.css?v=web1">
@@ -113,6 +113,16 @@
       </button>
       <span id="lego-estado" class="lego-chip" role="status" aria-live="polite">Desconectado</span>
       <button class="tb-btn" id="bt-lego-parar" title="Parar o programa que está rodando no hub" disabled>
+        <svg viewBox="0 0 24 24"><path d="M6 6h12v12H6z"/></svg><span>Parar</span>
+      </button>
+    </div>
+
+    <div id="k10-hub" hidden>
+      <button class="tb-btn" id="bt-k10-conectar" title="Conectar a UNIHIKER K10 pelo cabo USB-C">
+        <svg viewBox="0 0 24 24"><path d="M15 7v4h1v2h-3V5h2l-3-4-3 4h2v8H8v-2.27A2 2 0 1 0 6 11.27V13c0 1.1.9 2 2 2h3v3.05a2.5 2.5 0 1 0 2 0V15h3c1.1 0 2-.9 2-2v-2h1V7h-4z"/></svg><span>Conectar K10</span>
+      </button>
+      <span id="k10-estado" class="lego-chip" role="status" aria-live="polite">Desconectada</span>
+      <button class="tb-btn" id="bt-k10-parar" title="Parar o programa da K10 (Ctrl+C)" disabled>
         <svg viewBox="0 0 24 24"><path d="M6 6h12v12H6z"/></svg><span>Parar</span>
       </button>
     </div>
@@ -387,7 +397,7 @@
     <p class="board-intro">Escolha sua placa e dê vida às suas ideias. Um passo de cada vez.</p>
     <div class="board-options">
       <button class="board-card" id="choose-uno" data-board="uno"><span class="board-chip">CIRCUITOS & CRIAÇÃO</span><div class="board-photo"><img src="assets/boards/uno.jpg" alt="Foto do Arduino Uno R3" width="1000" height="750"></div><span class="board-card-body"><strong>Arduino Uno</strong><span>Do primeiro LED aos seus próprios circuitos.</span><small>8 módulos · 40 atividades · C++</small><b class="board-cta">Explorar Arduino <span>→</span></b></span></button>
-      <button class="board-card k10-card" id="choose-k10" data-board="k10"><span class="board-chip">SENSORES & DESCOBERTAS</span><div class="board-photo"><img src="assets/boards/k10.jpg" alt="Foto da UNIHIKER K10 com tela colorida" width="1560" height="1040"></div><span class="board-card-body"><strong>UNIHIKER K10</strong><span>Uma placa. Tela, sensores e um mundo de possibilidades.</span><small>10 módulos · 50 atividades · C++ e MicroPython</small><b class="board-cta">Explorar K10 <span>→</span></b></span></button>
+      <button class="board-card k10-card" id="choose-k10" data-board="k10"><span class="board-chip">SENSORES & DESCOBERTAS</span><div class="board-photo"><img src="assets/boards/k10.jpg" alt="Foto da UNIHIKER K10 com tela colorida" width="1560" height="1040"></div><span class="board-card-body"><strong>UNIHIKER K10</strong><span>Uma placa. Tela, sensores e um mundo de possibilidades.</span><small>12 módulos · 60 atividades · C++ e MicroPython</small><b class="board-cta">Explorar K10 <span>→</span></b></span></button>
       <button class="board-card lego-card" id="choose-lego" data-board="lego"><span class="board-chip">MOTORES & CONTROLE</span><div class="board-photo"><img src="assets/boards/lego.png" alt="Technic Hub da LEGO, o hub do Liebherr LR 13000" width="525" height="525"></div><span class="board-card-body"><strong>LEGO Technic</strong><span>Motores, controle remoto e Python (Pybricks) no hub do Liebherr LR 13000.</span><small>Blocos e Python · Bluetooth</small><small id="lego-card-aviso" class="lego-card-aviso" hidden>Use o Google Chrome ou o Microsoft Edge para conectar o hub.</small><b class="board-cta">Explorar LEGO <span>→</span></b></span></button>
       <button class="board-card mb-card" id="choose-microbit" data-board="microbit"><span class="board-chip">LEDS, SENSORES & JOGOS</span><div class="board-photo"><img src="assets/boards/microbit.svg" alt="Desenho da placa micro:bit V2 com a matriz de LEDs e os botões A e B" width="520" height="400"></div><span class="board-card-body"><strong>BBC micro:bit V2</strong><span>Tela de LEDs, sensores, rádio e componentes externos. Blocos, JavaScript ou MicroPython.</span><small>18 módulos · 90 atividades · JavaScript e MicroPython</small><small id="mb-card-aviso" class="lego-card-aviso" hidden>Use o Google Chrome ou o Microsoft Edge para conectar a placa.</small><b class="board-cta">Explorar micro:bit <span>→</span></b></span></button>
     </div>
@@ -442,8 +452,8 @@
 </dialog>
 <script src="js/dados.js?v=web1"></script>
 <script src="js/k10.js?v=web1"></script>
-<script src="js/ide.js?v=joy7"></script>
-<script src="js/monitor.js?v=web1"></script>
+<script src="js/ide.js?v=k10w1"></script>
+<script src="js/monitor.js?v=k10w1"></script>
 <script src="js/barra.js?v=web1"></script>
 
 <!-- Modo Blocos — Blockly 13.3.0 vendorizado, sem CDN -->
@@ -486,9 +496,14 @@
 <script src="js/microbit_fases_gerado.js?v=web1"></script>
 <script src="js/microbit.js?v=web1"></script>
 
+<!-- UNIHIKER K10 em MicroPython pela USB do navegador (Web Serial) + instalador do firmware -->
+<script src="js/vendor/esptool/esptool.js?v=k10w1"></script>
+<script src="js/k10_mp.js?v=k10w1"></script>
+<script src="js/k10_firmware.js?v=k10w1"></script>
+<script src="js/k10_web.js?v=k10w1"></script>
 <script src="js/menus.js?v=web1"></script>
 <script src="js/academy.js?v=web1"></script>
-<script src="js/boards.js?v=joy1"></script>
+<script src="js/boards.js?v=k10w1"></script>
 <script src="js/joystick_gen.js?v=joy8"></script>
 <script src="js/joystick_app.js?v=joy7"></script>
 <script src="js/joystick.js?v=joy8"></script>
@@ -497,6 +512,6 @@
 <script src="js/mide_serial.js?v=web1"></script>
 <script src="js/mide_firmware.js?v=web1"></script>
 <script src="js/mide_fases_bin.js?v=web1"></script>
-<script src="js/mide_web.js?v=web1"></script>
+<script src="js/mide_web.js?v=k10w1"></script>
 </body>
 </html>

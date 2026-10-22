@@ -1,0 +1,9 @@
+esptool.js — esptool-js 0.7.0 (Espressif, Apache-2.0) com pako 2.x (MIT) e
+atob-lite 2.x (MIT), num pacote só (esbuild, formato IIFE, global EspTool).
+Usado pela MIDE EDU para instalar o firmware MicroPython na UNIHIKER K10
+(ESP32-S3) direto do navegador, pela Web Serial.
+
+Para refazer:
+  npm install esptool-js@0.7.0 esbuild
+  echo "export { ESPLoader, Transport, ESPRESSIF_VID, USB_JTAG_SERIAL_PID } from 'esptool-js';" > entrada.mjs
+  npx esbuild entrada.mjs --bundle --format=iife --global-name=EspTool --minify --target=es2020 --outfile=esptool.js
